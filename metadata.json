@@ -1,0 +1,5 @@
+{
+  "name": "HaxBall Clone JS",
+  "description": "A 2D physics-based multiplayer soccer game using PeerJS for P2P connectivity. Features elastic collisions, smooth movement, and real-time synchronization.",
+  "requestFramePermissions": []
+}
