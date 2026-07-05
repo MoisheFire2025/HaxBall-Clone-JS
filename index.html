@@ -1,13 +1,536 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Haxball · HTML + CSS + JS</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
+    body {
+      background: linear-gradient(145deg, #0b1a2e, #0d1f33);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      padding: 16px;
+      margin: 0;
+    }
+
+    .game-wrapper {
+      background: #1f3a4b;
+      border-radius: 40px 40px 28px 28px;
+      padding: 20px 20px 28px;
+      box-shadow: 0 20px 30px rgba(0, 0, 0, 0.7), inset 0 0 4px #5f8aa0;
+      max-width: 780px;
+      width: 100%;
+    }
+
+    /* Panel superior: nombres y equipos */
+    .player-panel {
+      background: #0f2633;
+      border-radius: 60px;
+      padding: 12px 18px;
+      margin-bottom: 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 10px 14px;
+      box-shadow: inset 0 3px 6px rgba(0,0,0,0.6), 0 2px 0 #3b6a7c;
+    }
+
+    .player-panel input {
+      background: #1b3b4a;
+      border: none;
+      border-radius: 40px;
+      padding: 8px 16px;
+      font-size: 0.95rem;
+      color: #eaf6fc;
+      outline: 2px solid transparent;
+      transition: 0.2s;
+      min-width: 120px;
+      flex: 1 1 130px;
+      box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    }
+
+    .player-panel input::placeholder {
+      color: #89b7cc;
+      font-weight: 300;
+    }
+
+    .player-panel input:focus {
+      outline: 2px solid #7fc1db;
+      background: #214c5e;
+    }
+
+    .team-selector {
+      display: flex;
+      gap: 8px;
+      background: #18323f;
+      padding: 5px 10px;
+      border-radius: 50px;
+    }
+
+    .team-btn {
+      background: transparent;
+      border: 2px solid transparent;
+      border-radius: 40px;
+      padding: 5px 14px;
+      font-weight: 600;
+      font-size: 0.85rem;
+      color: #bddbe8;
+      cursor: pointer;
+      transition: 0.2s;
+      letter-spacing: 0.3px;
+    }
+
+    .team-btn.azul {
+      border-color: #3b9bc7;
+      color: #b0ddf5;
+    }
+    .team-btn.azul.active {
+      background: #2a7fa3;
+      color: white;
+      box-shadow: 0 0 8px #4bb3e0;
+    }
+
+    .team-btn.rojo {
+      border-color: #c75f5f;
+      color: #f5c0c0;
+    }
+    .team-btn.rojo.active {
+      background: #a34040;
+      color: white;
+      box-shadow: 0 0 8px #e06060;
+    }
+
+    .join-btn {
+      background: #3f8a6b;
+      border: none;
+      border-radius: 40px;
+      padding: 8px 20px;
+      font-weight: 700;
+      color: white;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #1f4f3a, inset 0 1px 2px #a5e0c0;
+      transition: 0.08s linear;
+      letter-spacing: 0.5px;
+      flex: 0 1 auto;
+    }
+
+    .join-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #1f4f3a;
+    }
+
+    .player-list {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px 12px;
+      background: #0b202b;
+      border-radius: 40px;
+      padding: 6px 16px;
+      min-height: 38px;
+      flex: 2 1 200px;
+    }
+
+    .player-tag {
+      background: #1f4052;
+      padding: 4px 14px 4px 12px;
+      border-radius: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #deedf5;
+      box-shadow: inset 0 1px 3px #2d5a6e;
+    }
+
+    .player-tag .dot {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 12px;
+      background: #3b9bc7;
+    }
+    .player-tag .dot.rojo { background: #c75f5f; }
+
+    .player-tag .remove-btn {
+      background: #3f2c2c;
+      border: none;
+      color: #dba8a8;
+      border-radius: 30px;
+      width: 20px;
+      height: 20px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.1s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-left: 2px;
+    }
+    .player-tag .remove-btn:hover {
+      background: #6b3a3a;
+      color: white;
+    }
+
+    /* CANCHA */
+    .canvas-container {
+      background: #1f4f5e;
+      border-radius: 40px;
+      padding: 12px;
+      box-shadow: inset 0 -6px 0 #0e2e38, 0 10px 20px rgba(0,0,0,0.5);
+    }
+
+    #haxballCanvas {
+      display: block;
+      width: 100%;
+      height: auto;
+      aspect-ratio: 700 / 450;
+      background: #2d7d6e;
+      border-radius: 28px;
+      box-shadow: inset 0 0 0 4px #205a4e, inset 0 0 0 8px #358577;
+      cursor: none;
+      touch-action: none;
+    }
+
+    .info-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      color: #8db9cc;
+      font-size: 0.8rem;
+      padding: 0 8px;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .info-footer button {
+      background: #264f5e;
+      border: none;
+      color: #c3e2f0;
+      padding: 6px 14px;
+      border-radius: 40px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: 0.1s;
+      box-shadow: 0 2px 0 #10333d;
+    }
+    .info-footer button:active {
+      transform: translateY(2px);
+      box-shadow: 0 0px 0 #10333d;
+    }
+
+    @media (max-width: 500px) {
+      .player-panel {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+        border-radius: 30px;
+        padding: 14px;
+      }
+      .team-selector { justify-content: center; }
+      .join-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="game-wrapper">
+  <!-- Panel superior: nombre, equipo, lista de jugadores -->
+  <div class="player-panel" id="playerPanel">
+    <input type="text" id="playerNameInput" placeholder="Tu nombre" value="Jugador" maxlength="14">
+    <div class="team-selector">
+      <button class="team-btn azul active" data-team="azul">🔵 Azul</button>
+      <button class="team-btn rojo" data-team="rojo">🔴 Rojo</button>
+    </div>
+    <button class="join-btn" id="joinBtn">➕ Unirse</button>
+    <div class="player-list" id="playerListContainer">
+      <!-- Los jugadores se renderizan aquí -->
+    </div>
+  </div>
+
+  <!-- CANCHA -->
+  <div class="canvas-container">
+    <canvas id="haxballCanvas" width="700" height="450"></canvas>
+  </div>
+
+  <div class="info-footer">
+    <span>⚽ Haz clic en la cancha para mover la pelota</span>
+    <button id="resetBallBtn">🔄 Reiniciar pelota</button>
+  </div>
+</div>
+
+<script>
+  (function() {
+    // ---------- ESTADO ----------
+    const state = {
+      players: [],          // { id, name, team }
+      ball: { x: 350, y: 225, vx: 0, vy: 0 },
+      nextId: 1,
+    };
+
+    // Elementos DOM
+    const canvas = document.getElementById('haxballCanvas');
+    const ctx = canvas.getContext('2d');
+    const playerListContainer = document.getElementById('playerListContainer');
+    const nameInput = document.getElementById('playerNameInput');
+    const joinBtn = document.getElementById('joinBtn');
+    const resetBtn = document.getElementById('resetBallBtn');
+    const teamBtns = document.querySelectorAll('.team-btn');
+
+    // Variables de equipo seleccionado
+    let selectedTeam = 'azul';  // 'azul' o 'rojo'
+
+    // ---------- FUNCIONES DE RENDER ----------
+    function renderPlayerList() {
+      if (!playerListContainer) return;
+      if (state.players.length === 0) {
+        playerListContainer.innerHTML = `<span style="color:#6f9eb0; font-size:0.8rem; opacity:0.7;">👥 Sin jugadores</span>`;
+        return;
+      }
+
+      let html = '';
+      state.players.forEach(p => {
+        const dotClass = p.team === 'azul' ? 'dot' : 'dot rojo';
+        html += `
+          <span class="player-tag">
+            <span class="${dotClass}"></span>
+            ${p.name}
+            <button class="remove-btn" data-id="${p.id}">✕</button>
+          </span>
+        `;
+      });
+      playerListContainer.innerHTML = html;
+
+      // Eventos para eliminar jugadores
+      document.querySelectorAll('.player-tag .remove-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = parseInt(btn.dataset.id, 10);
+          removePlayer(id);
+        });
+      });
+    }
+
+    // Dibujar cancha + pelota + jugadores (círculos)
+    function drawCourt() {
+      const W = 700, H = 450;
+      ctx.clearRect(0, 0, W, H);
+
+      // Fondo y líneas
+      ctx.fillStyle = '#2d7d6e';
+      ctx.fillRect(0, 0, W, H);
+
+      // Líneas de cancha
+      ctx.strokeStyle = '#d9f2e6';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(10, 10, W-20, H-20);
+
+      // Línea central
+      ctx.beginPath();
+      ctx.moveTo(W/2, 10);
+      ctx.lineTo(W/2, H-10);
+      ctx.stroke();
+
+      // Círculo central
+      ctx.beginPath();
+      ctx.arc(W/2, H/2, 50, 0, 2 * Math.PI);
+      ctx.stroke();
+
+      // Áreas (pequeñas)
+      ctx.strokeRect(20, H/2 - 60, 70, 120);
+      ctx.strokeRect(W-90, H/2 - 60, 70, 120);
+
+      // Porterías (simples)
+      ctx.fillStyle = '#c9e6d9';
+      ctx.fillRect(10, H/2 - 30, 15, 60);
+      ctx.fillRect(W-25, H/2 - 30, 15, 60);
+      ctx.fillStyle = '#b0d4c4';
+      ctx.fillRect(8, H/2 - 24, 10, 48);
+      ctx.fillRect(W-18, H/2 - 24, 10, 48);
+
+      // Dibujar jugadores (círculos con inicial)
+      state.players.forEach(p => {
+        const isBlue = p.team === 'azul';
+        const color = isBlue ? '#3b9bc7' : '#c75f5f';
+        const light = isBlue ? '#7fc1db' : '#e08787';
+        // Posición aleatoria pero fija por id (para simular)
+        const seed = (p.id * 31) % 100;
+        const x = 80 + (seed * 5.2) % 540;
+        const y = 60 + (seed * 3.7) % 330;
+        ctx.shadowColor = 'rgba(0,0,0,0.3)';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(x, y, 16, 0, 2 * Math.PI);
+        ctx.fillStyle = color;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#f0faff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Inicial
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 13px "Segoe UI"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(p.name.charAt(0).toUpperCase(), x, y-1);
+      });
+
+      // Pelota
+      const b = state.ball;
+      ctx.shadowColor = 'rgba(0,0,0,0.4)';
+      ctx.shadowBlur = 18;
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, 12, 0, 2 * Math.PI);
+      ctx.fillStyle = '#f5f1d9';
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#bbaa7a';
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+      // Detalle
+      ctx.beginPath();
+      ctx.arc(b.x-4, b.y-4, 4, 0, 2 * Math.PI);
+      ctx.fillStyle = '#e8e0b0';
+      ctx.fill();
+    }
+
+    // ---------- ACTUALIZAR TODO ----------
+    function updateUI() {
+      renderPlayerList();
+      drawCourt();
+    }
+
+    // ---------- CRUD JUGADORES ----------
+    function addPlayer(name, team) {
+      if (!name.trim()) {
+        alert('Escribe un nombre');
+        return false;
+      }
+      // Evitar duplicados exactos (case insensitive)
+      const exists = state.players.some(p => p.name.toLowerCase() === name.trim().toLowerCase());
+      if (exists) {
+        alert(`El nombre "${name.trim()}" ya está en la cancha.`);
+        return false;
+      }
+      const newPlayer = {
+        id: state.nextId++,
+        name: name.trim(),
+        team: team,
+      };
+      state.players.push(newPlayer);
+      updateUI();
+      return true;
+    }
+
+    function removePlayer(id) {
+      state.players = state.players.filter(p => p.id !== id);
+      updateUI();
+    }
+
+    // ---------- RESET PELOTA ----------
+    function resetBall() {
+      state.ball.x = 350 + (Math.random() * 60 - 30);
+      state.ball.y = 225 + (Math.random() * 60 - 30);
+      state.ball.vx = 0;
+      state.ball.vy = 0;
+      drawCourt();
+    }
+
+    // ---------- MOVER PELOTA (click en canvas) ----------
+    function handleCanvasClick(e) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      const mouseX = (e.clientX - rect.left) * scaleX;
+      const mouseY = (e.clientY - rect.top) * scaleY;
+      // Limitar dentro de la cancha (con margen)
+      const clampX = Math.min(680, Math.max(20, mouseX));
+      const clampY = Math.min(430, Math.max(20, mouseY));
+      state.ball.x = clampX;
+      state.ball.y = clampY;
+      state.ball.vx = 0;
+      state.ball.vy = 0;
+      drawCourt();
+    }
+
+    // ---------- EVENTOS ----------
+    function initEvents() {
+      // Selección de equipo
+      teamBtns.forEach(btn => {
+        btn.addEventListener('click', function() {
+          teamBtns.forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+          selectedTeam = this.dataset.team;
+        });
+      });
+
+      // Botón unirse
+      joinBtn.addEventListener('click', function() {
+        const name = nameInput.value.trim() || 'Jugador';
+        addPlayer(name, selectedTeam);
+        nameInput.value = '';
+        nameInput.focus();
+      });
+
+      // Enter en input nombre
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          joinBtn.click();
+        }
+      });
+
+      // Click en canvas
+      canvas.addEventListener('click', handleCanvasClick);
+
+      // Reset pelota
+      resetBtn.addEventListener('click', resetBall);
+
+      // Eliminar jugadores desde la lista (delegación) ya está en renderPlayerList
+    }
+
+    // ---------- INICIALIZAR CON JUGADORES DE EJEMPLO ----------
+    function initDemoPlayers() {
+      addPlayer('Ana', 'azul');
+      addPlayer('Luis', 'rojo');
+      addPlayer('Elena', 'azul');
+      // Resetear ID para que no crezca descontrolado (opcional)
+      // Pero mantenemos coherencia
+    }
+
+    // ---------- ARRANQUE ----------
+    function init() {
+      // Asegurar equipo activo inicial
+      document.querySelector('.team-btn.azul')?.classList.add('active');
+      selectedTeam = 'azul';
+
+      initEvents();
+      // Poner algunos jugadores de demo (si se desea)
+      // Limpiar state.players para evitar duplicados si se recarga
+      state.players = [];
+      state.nextId = 1;
+      initDemoPlayers();
+
+      // Posición inicial de la pelota
+      resetBall();
+      updateUI();
+    }
+
+    init();
+  })();
+</script>
+</body>
+</html>
