@@ -1,13 +1,51 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HaxBall Multiplayer · PeerJS</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>HaxBall Multiplayer · P2P</title>
   <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
   <style>
-    /* (estilos igual que antes, omitidos por brevedad) */
-    *{box-sizing:border-box;margin:0;padding:0}body{background:linear-gradient(145deg,#0b1a2e,#0d1f33);min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:'Segoe UI',system-ui,sans-serif;padding:16px}.game-wrapper{background:#1f3a4b;border-radius:40px;padding:20px;box-shadow:0 20px 30px rgba(0,0,0,0.7),inset 0 0 4px #5f8aa0;max-width:820px;width:100%}.status-bar{background:#0f2633;border-radius:60px;padding:10px 18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;color:#8db9cc;font-size:.85rem}.status-bar .room-id{background:#1a3a47;padding:4px 14px;border-radius:30px;font-family:monospace;color:#7fc1db;font-size:.8rem;word-break:break-all;max-width:200px}.status-bar .copy-btn{background:#264f5e;border:none;color:#c3e2f0;padding:4px 12px;border-radius:20px;cursor:pointer;font-size:.75rem}.player-panel{background:#0f2633;border-radius:60px;padding:12px 18px;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 14px;box-shadow:inset 0 3px 6px rgba(0,0,0,0.6),0 2px 0 #3b6a7c}.player-panel input{background:#1b3b4a;border:none;border-radius:40px;padding:8px 16px;font-size:.95rem;color:#eaf6fc;outline:2px solid transparent;transition:.2s;min-width:120px;flex:1 1 130px;box-shadow:inset 0 2px 5px rgba(0,0,0,0.5)}.player-panel input:focus{outline:2px solid #7fc1db;background:#214c5e}.player-panel input:disabled{opacity:.5;cursor:not-allowed}.team-selector{display:flex;gap:8px;background:#18323f;padding:5px 10px;border-radius:50px}.team-btn{background:transparent;border:2px solid transparent;border-radius:40px;padding:5px 14px;font-weight:600;font-size:.85rem;color:#bddbe8;cursor:pointer;transition:.2s}.team-btn.azul{border-color:#3b9bc7;color:#b0ddf5}.team-btn.azul.active{background:#2a7fa3;color:#fff;box-shadow:0 0 8px #4bb3e0}.team-btn.rojo{border-color:#c75f5f;color:#f5c0c0}.team-btn.rojo.active{background:#a34040;color:#fff;box-shadow:0 0 8px #e06060}.action-btn{border:none;border-radius:40px;padding:8px 20px;font-weight:700;font-size:.95rem;cursor:pointer;transition:.08s linear;flex:0 1 auto}.action-btn:active{transform:translateY(3px)}.action-btn:disabled{opacity:.5;transform:translateY(2px);cursor:not-allowed}.action-btn.join{background:#3f8a6b;color:#fff;box-shadow:0 4px 0 #1f4f3a,inset 0 1px 2px #a5e0c0}.action-btn.leave{background:#8a3f3f;color:#fff;box-shadow:0 4px 0 #4f1f1f,inset 0 1px 2px #e0a5a5;display:none}.action-btn.host{background:#3f6b8a;color:#fff;box-shadow:0 4px 0 #1f3f4f,inset 0 1px 2px #a5c0e0}.action-btn.connect{background:#6b8a3f;color:#fff;box-shadow:0 4px 0 #3f4f1f,inset 0 1px 2px #c0e0a5}.join-input-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.join-input-group input{min-width:150px;flex:0 1 160px}.player-list{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;background:#0b202b;border-radius:40px;padding:6px 16px;min-height:38px;flex:2 1 200px}.player-tag{background:#1f4052;padding:4px 14px 4px 12px;border-radius:30px;display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:500;color:#deedf5;box-shadow:inset 0 1px 3px #2d5a6e}.player-tag .dot{display:inline-block;width:12px;height:12px;border-radius:12px;background:#3b9bc7}.player-tag .dot.rojo{background:#c75f5f}.player-tag .you{font-size:.65rem;background:#2a7fa3;padding:0 8px;border-radius:12px;color:#fff}.canvas-container{background:#1f4f5e;border-radius:40px;padding:12px;box-shadow:inset 0 -6px 0 #0e2e38,0 10px 20px rgba(0,0,0,0.5)}#haxballCanvas{display:block;width:100%;height:auto;aspect-ratio:800/500;background:#2d7d6e;border-radius:28px;box-shadow:inset 0 0 0 4px #205a4e,inset 0 0 0 8px #358577;cursor:none;touch-action:none}.info-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:#8db9cc;font-size:.8rem;padding:0 8px;flex-wrap:wrap;gap:6px}.info-footer .controls-hint{display:flex;gap:12px;flex-wrap:wrap}.info-footer .controls-hint span{background:#1a3a47;padding:2px 10px;border-radius:20px;font-size:.7rem}.info-footer .player-count{background:#1a3a47;padding:2px 12px;border-radius:20px;font-size:.7rem}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f3a4b;color:#eaf6fc;padding:12px 24px;border-radius:40px;box-shadow:0 10px 30px rgba(0,0,0,0.7);border:1px solid #3b6a7c;z-index:999;animation:slideUp .3s ease-out}@keyframes slideUp{from{transform:translateX(-50%) translateY(100px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}@media(max-width:600px){.player-panel{flex-direction:column;align-items:stretch;gap:8px}.team-selector{justify-content:center}.action-btn{width:100%}.join-input-group{flex-direction:column}.join-input-group input{width:100%}.status-bar{flex-direction:column;align-items:stretch;text-align:center}.status-bar .room-id{max-width:100%}}
+    /* ===== ESTILOS COMPACTOS Y MODERNOS ===== */
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:linear-gradient(145deg,#0b1a2e,#0d1f33);min-height:100vh;display:flex;justify-content:center;align-items:center;font-family:'Segoe UI',system-ui,sans-serif;padding:16px}
+    .game-wrapper{background:#1f3a4b;border-radius:40px;padding:20px;box-shadow:0 20px 30px rgba(0,0,0,0.7),inset 0 0 4px #5f8aa0;max-width:820px;width:100%}
+    .status-bar{background:#0f2633;border-radius:60px;padding:10px 18px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;color:#8db9cc;font-size:.85rem}
+    .status-bar .room-id{background:#1a3a47;padding:4px 14px;border-radius:30px;font-family:monospace;color:#7fc1db;font-size:.8rem;word-break:break-all;max-width:200px}
+    .status-bar .copy-btn{background:#264f5e;border:none;color:#c3e2f0;padding:4px 12px;border-radius:20px;cursor:pointer;font-size:.75rem}
+    .player-panel{background:#0f2633;border-radius:60px;padding:12px 18px;margin-bottom:18px;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px 14px;box-shadow:inset 0 3px 6px rgba(0,0,0,0.6),0 2px 0 #3b6a7c}
+    .player-panel input{background:#1b3b4a;border:none;border-radius:40px;padding:8px 16px;font-size:.95rem;color:#eaf6fc;outline:2px solid transparent;transition:.2s;min-width:120px;flex:1 1 130px;box-shadow:inset 0 2px 5px rgba(0,0,0,0.5)}
+    .player-panel input:focus{outline:2px solid #7fc1db;background:#214c5e}
+    .player-panel input:disabled{opacity:.5;cursor:not-allowed}
+    .team-selector{display:flex;gap:8px;background:#18323f;padding:5px 10px;border-radius:50px}
+    .team-btn{background:transparent;border:2px solid transparent;border-radius:40px;padding:5px 14px;font-weight:600;font-size:.85rem;color:#bddbe8;cursor:pointer;transition:.2s}
+    .team-btn.azul{border-color:#3b9bc7;color:#b0ddf5}
+    .team-btn.azul.active{background:#2a7fa3;color:#fff;box-shadow:0 0 8px #4bb3e0}
+    .team-btn.rojo{border-color:#c75f5f;color:#f5c0c0}
+    .team-btn.rojo.active{background:#a34040;color:#fff;box-shadow:0 0 8px #e06060}
+    .action-btn{border:none;border-radius:40px;padding:8px 20px;font-weight:700;font-size:.95rem;cursor:pointer;transition:.08s linear;flex:0 1 auto}
+    .action-btn:active{transform:translateY(3px)}
+    .action-btn:disabled{opacity:.5;transform:translateY(2px);cursor:not-allowed}
+    .action-btn.join{background:#3f8a6b;color:#fff;box-shadow:0 4px 0 #1f4f3a,inset 0 1px 2px #a5e0c0}
+    .action-btn.leave{background:#8a3f3f;color:#fff;box-shadow:0 4px 0 #4f1f1f,inset 0 1px 2px #e0a5a5;display:none}
+    .action-btn.host{background:#3f6b8a;color:#fff;box-shadow:0 4px 0 #1f3f4f,inset 0 1px 2px #a5c0e0}
+    .action-btn.connect{background:#6b8a3f;color:#fff;box-shadow:0 4px 0 #3f4f1f,inset 0 1px 2px #c0e0a5}
+    .join-input-group{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+    .join-input-group input{min-width:150px;flex:0 1 160px}
+    .player-list{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 12px;background:#0b202b;border-radius:40px;padding:6px 16px;min-height:38px;flex:2 1 200px}
+    .player-tag{background:#1f4052;padding:4px 14px 4px 12px;border-radius:30px;display:inline-flex;align-items:center;gap:6px;font-size:.85rem;font-weight:500;color:#deedf5;box-shadow:inset 0 1px 3px #2d5a6e}
+    .player-tag .dot{display:inline-block;width:12px;height:12px;border-radius:12px;background:#3b9bc7}
+    .player-tag .dot.rojo{background:#c75f5f}
+    .player-tag .you{font-size:.65rem;background:#2a7fa3;padding:0 8px;border-radius:12px;color:#fff}
+    .canvas-container{background:#1f4f5e;border-radius:40px;padding:12px;box-shadow:inset 0 -6px 0 #0e2e38,0 10px 20px rgba(0,0,0,0.5)}
+    #haxballCanvas{display:block;width:100%;height:auto;aspect-ratio:800/500;background:#2d7d6e;border-radius:28px;box-shadow:inset 0 0 0 4px #205a4e,inset 0 0 0 8px #358577;cursor:none;touch-action:none}
+    .info-footer{display:flex;justify-content:space-between;align-items:center;margin-top:12px;color:#8db9cc;font-size:.8rem;padding:0 8px;flex-wrap:wrap;gap:6px}
+    .info-footer .controls-hint{display:flex;gap:12px;flex-wrap:wrap}
+    .info-footer .controls-hint span{background:#1a3a47;padding:2px 10px;border-radius:20px;font-size:.7rem}
+    .info-footer .player-count{background:#1a3a47;padding:2px 12px;border-radius:20px;font-size:.7rem}
+    .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1f3a4b;color:#eaf6fc;padding:12px 24px;border-radius:40px;box-shadow:0 10px 30px rgba(0,0,0,0.7);border:1px solid #3b6a7c;z-index:999;animation:slideUp .3s ease-out}
+    @keyframes slideUp{from{transform:translateX(-50%) translateY(100px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+    @media(max-width:600px){.player-panel{flex-direction:column;align-items:stretch;gap:8px}.team-selector{justify-content:center}.action-btn{width:100%}.join-input-group{flex-direction:column}.join-input-group input{width:100%}.status-bar{flex-direction:column;align-items:stretch;text-align:center}.status-bar .room-id{max-width:100%}}
   </style>
 </head>
 <body>
@@ -16,7 +54,7 @@
     <span>🔗 Estado: <span id="connectionStatus">Conectando...</span></span>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <span class="room-id" id="roomIdDisplay">Sin sala</span>
-      <button class="copy-btn" id="copyRoomBtn" style="display:none;">📋 Copiar ID</button>
+      <button class="copy-btn" id="copyRoomBtn" style="display:none;">📋 Copiar enlace</button>
     </div>
   </div>
   <div class="player-panel">
@@ -27,13 +65,13 @@
     </div>
     <button class="action-btn host" id="hostBtn">🏠 Crear Sala</button>
     <div class="join-input-group">
-      <input type="text" id="roomIdInput" placeholder="ID de sala" maxlength="40">
+      <input type="text" id="roomIdInput" placeholder="ID de sala (opcional)" maxlength="40">
       <button class="action-btn connect" id="connectBtn">🔗 Unirse</button>
     </div>
     <button class="action-btn join" id="joinBtn" style="display:none;">✅ En partida</button>
     <button class="action-btn leave" id="leaveBtn">🚪 Salir</button>
     <div class="player-list" id="playerListContainer">
-      <span style="color:#6f9eb0; font-size:0.8rem; opacity:0.7;">👥 Sin jugadores</span>
+      <span style="color:#6f9eb0;font-size:.8rem;opacity:.7;">👥 Sin jugadores</span>
     </div>
   </div>
   <div class="canvas-container">
@@ -49,120 +87,185 @@
 </div>
 <script>
 (function() {
-  // --- CONSTANTES Y VECTORES (igual) ---
-  const CANVAS_WIDTH = 800, CANVAS_HEIGHT = 500;
-  const BALL_RADIUS = 10, PLAYER_RADIUS = 15, PLAYER_SPEED = 4.2, FRICTION = 0.985, WALL_BOUNCE = 0.7, GOAL_SIZE = 120, KICK_POWER = 6.5;
-  const add=(v1,v2)=>({x:v1.x+v2.x,y:v1.y+v2.y}), sub=(v1,v2)=>({x:v1.x-v2.x,y:v1.y-v2.y}), mul=(v,s)=>({x:v.x*s,y:v.y*s}), div=(v,s)=>({x:v.x/s,y:v.y/s});
-  const dot=(v1,v2)=>v1.x*v2.x+v1.y*v2.y, magSq=v=>v.x*v.x+v.y*v.y, mag=v=>Math.sqrt(magSq(v));
-  const normalize=v=>{const m=mag(v); return m===0?{x:0,y:0}:div(v,m);};
-  const dist=(v1,v2)=>mag(sub(v1,v2)), clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
-  const resolveCollision=(p1,v1,m1,p2,v2,m2)=>{
-    const xDiff=sub(p1,p2), vDiff=sub(v1,v2), mFactor1=(2*m2)/(m1+m2), dotVal1=dot(vDiff,xDiff)/magSq(xDiff), newV1=sub(v1,mul(xDiff,mFactor1*dotVal1));
-    const xDiff2=sub(p2,p1), vDiff2=sub(v2,v1), mFactor2=(2*m1)/(m1+m2), dotVal2=dot(vDiff2,xDiff2)/magSq(xDiff2), newV2=sub(v2,mul(xDiff2,mFactor2*dotVal2));
-    return {v1:newV1, v2:newV2};
-  };
+  // ============================================================
+  //  CONSTANTES Y UTILIDADES VECTORIALES (física simplificada)
+  // ============================================================
+  const W = 800, H = 500;
+  const BALL_R = 10, PLAYER_R = 15, SPEED = 4.2, FRIC = 0.985, BOUNCE = 0.7, GOAL_H = 120, KICK = 6.5;
+  const add=(a,b)=>({x:a.x+b.x, y:a.y+b.y});
+  const sub=(a,b)=>({x:a.x-b.x, y:a.y-b.y});
+  const mul=(v,s)=>({x:v.x*s, y:v.y*s});
+  const div=(v,s)=>({x:v.x/s, y:v.y/s});
+  const dot=(a,b)=>a.x*b.x+a.y*b.y;
+  const mag=v=>Math.sqrt(v.x*v.x+v.y*v.y);
+  const norm=v=>{const m=mag(v); return m===0?{x:0,y:0}:div(v,m);};
+  const dist=(a,b)=>mag(sub(a,b));
+  const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
 
-  // --- CLASES ---
+  function resolveCollision(p1,v1,m1,p2,v2,m2){
+    const d=sub(p1,p2), dv=sub(v1,v2);
+    const f=(2*m2)/(m1+m2), t=dot(dv,d)/mag(d);
+    const nv1=sub(v1,mul(d,f*t));
+    const d2=sub(p2,p1), dv2=sub(v2,v1);
+    const f2=(2*m1)/(m1+m2), t2=dot(dv2,d2)/mag(d2);
+    const nv2=sub(v2,mul(d2,f2*t2));
+    return {v1:nv1, v2:nv2};
+  }
+
+  // ============================================================
+  //  CLASES
+  // ============================================================
   class Player {
     constructor(id, name, team, x, y) {
-      this.id = id; this.name = name; this.team = team; this.pos = {x,y}; this.vel={x:0,y:0};
-      this.radius=PLAYER_RADIUS; this.mass=1; this.kicking=false;
+      this.id = id;
+      this.name = name;
+      this.team = team;
+      this.pos = {x, y};
+      this.vel = {x:0, y:0};
+      this.radius = PLAYER_R;
+      this.mass = 1;
+      this.kicking = false;
     }
-    update(){this.pos.x+=this.vel.x; this.pos.y+=this.vel.y; this.vel.x*=FRICTION; this.vel.y*=FRICTION;}
-    toJSON(){return {id:this.id,name:this.name,team:this.team,pos:this.pos,vel:this.vel,kicking:this.kicking};}
-    static fromJSON(d){const p=new Player(d.id,d.name,d.team,d.pos.x,d.pos.y); p.vel=d.vel; p.kicking=d.kicking; return p;}
-  }
-  class Ball {
-    constructor(x,y){this.pos={x,y}; this.vel={x:0,y:0}; this.radius=BALL_RADIUS; this.mass=0.5;}
-    update(){this.pos.x+=this.vel.x; this.pos.y+=this.vel.y; this.vel.x*=FRICTION; this.vel.y*=FRICTION;}
-    toJSON(){return {pos:this.pos, vel:this.vel};}
-    static fromJSON(d){const b=new Ball(d.pos.x,d.pos.y); b.vel=d.vel; return b;}
+    update() {
+      this.pos.x += this.vel.x;
+      this.pos.y += this.vel.y;
+      this.vel.x *= FRIC;
+      this.vel.y *= FRIC;
+    }
+    toJSON() {
+      return {id:this.id, name:this.name, team:this.team, pos:this.pos, vel:this.vel, kicking:this.kicking};
+    }
+    static fromJSON(d) {
+      const p = new Player(d.id, d.name, d.team, d.pos.x, d.pos.y);
+      p.vel = d.vel;
+      p.kicking = d.kicking;
+      return p;
+    }
   }
 
-  // --- ESTADO ---
+  class Ball {
+    constructor(x, y) {
+      this.pos = {x, y};
+      this.vel = {x:0, y:0};
+      this.radius = BALL_R;
+      this.mass = 0.5;
+    }
+    update() {
+      this.pos.x += this.vel.x;
+      this.pos.y += this.vel.y;
+      this.vel.x *= FRIC;
+      this.vel.y *= FRIC;
+    }
+    toJSON() { return {pos:this.pos, vel:this.vel}; }
+    static fromJSON(d) {
+      const b = new Ball(d.pos.x, d.pos.y);
+      b.vel = d.vel;
+      return b;
+    }
+  }
+
+  // ============================================================
+  //  ESTADO GLOBAL
+  // ============================================================
   const state = {
     players: [],
-    ball: new Ball(CANVAS_WIDTH/2, CANVAS_HEIGHT/2),
-    localPlayerId: null,   // será el peerId del cliente
+    ball: new Ball(W/2, H/2),
+    localId: null,       // Peer ID del cliente actual
     isJoined: false,
     isHost: false,
     score: {azul:0, rojo:0},
     peer: null,
     connections: [],
     roomId: null,
-    isPeerReady: false,
+    ready: false,
     lastInputSend: 0
   };
-  // Almacén de inputs por id de jugador (para el host)
-  const playerInputs = {};
+  const inputsBuffer = {}; // { peerId: {up,down,left,right,kick} }
 
   let localInputs = { up:false, down:false, left:false, right:false, kick:false };
   let selectedTeam = 'azul';
-  let animationId = null;
-  let isGameLoopRunning = false;
+  let loopId = null;
 
-  // --- DOM ---
-  const canvas=document.getElementById('haxballCanvas'), ctx=canvas.getContext('2d');
-  const playerListContainer=document.getElementById('playerListContainer');
-  const nameInput=document.getElementById('playerNameInput');
-  const joinBtn=document.getElementById('joinBtn'), leaveBtn=document.getElementById('leaveBtn');
-  const hostBtn=document.getElementById('hostBtn'), connectBtn=document.getElementById('connectBtn');
-  const roomIdInput=document.getElementById('roomIdInput');
-  const roomIdDisplay=document.getElementById('roomIdDisplay'), copyRoomBtn=document.getElementById('copyRoomBtn');
-  const connectionStatus=document.getElementById('connectionStatus'), playerCount=document.getElementById('playerCount');
-  const teamBtns=document.querySelectorAll('.team-btn');
+  // ============================================================
+  //  DOM REFS
+  // ============================================================
+  const canvas = document.getElementById('haxballCanvas');
+  const ctx = canvas.getContext('2d');
+  const status = document.getElementById('connectionStatus');
+  const roomDisplay = document.getElementById('roomIdDisplay');
+  const copyBtn = document.getElementById('copyRoomBtn');
+  const nameInput = document.getElementById('playerNameInput');
+  const joinBtn = document.getElementById('joinBtn');
+  const leaveBtn = document.getElementById('leaveBtn');
+  const hostBtn = document.getElementById('hostBtn');
+  const connectBtn = document.getElementById('connectBtn');
+  const roomInput = document.getElementById('roomIdInput');
+  const playerList = document.getElementById('playerListContainer');
+  const playerCount = document.getElementById('playerCount');
+  const teamBtns = document.querySelectorAll('.team-btn');
 
-  // --- TOAST ---
-  function showToast(msg){
-    const old=document.querySelector('.toast'); if(old) old.remove();
-    const toast=document.createElement('div'); toast.className='toast'; toast.textContent=msg;
-    document.body.appendChild(toast); setTimeout(()=>toast.remove(),3000);
+  // ============================================================
+  //  TOAST
+  // ============================================================
+  function toast(msg) {
+    const old = document.querySelector('.toast');
+    if (old) old.remove();
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 3000);
   }
 
-  // --- PEER ---
+  // ============================================================
+  //  PEERJS INICIALIZACIÓN
+  // ============================================================
   function initPeer() {
     return new Promise((resolve) => {
       const peer = new Peer();
       peer.on('open', (id) => {
         state.peer = peer;
         state.roomId = id;
-        state.isPeerReady = true;
-        state.localPlayerId = id;  // cada cliente usa su peerId como identificador
-        roomIdDisplay.textContent = `ID: ${id}`;
-        copyRoomBtn.style.display = 'inline-block';
-        connectionStatus.textContent = 'Conectado';
-        connectionStatus.style.color = '#7fc1db';
+        state.localId = id;
+        state.ready = true;
+        roomDisplay.textContent = `ID: ${id}`;
+        copyBtn.style.display = 'inline-block';
+        status.textContent = 'Conectado';
+        status.style.color = '#7fc1db';
+        console.log('[Peer] Mi ID:', id);
         resolve(peer);
       });
       peer.on('error', (err) => {
-        console.error('Peer error:', err);
-        connectionStatus.textContent = 'Error: '+err.message;
-        connectionStatus.style.color = '#e06060';
-        showToast('❌ Error en PeerJS: '+err.message);
-        state.isPeerReady = false;
+        console.error('[Peer] Error:', err);
+        status.textContent = 'Error: '+err.message;
+        status.style.color = '#e06060';
+        toast('❌ ' + err.message);
+        state.ready = false;
       });
       peer.on('disconnected', () => {
-        connectionStatus.textContent = 'Desconectado';
-        connectionStatus.style.color = '#e06060';
-        showToast('⚠️ Desconectado del servidor');
-        state.isPeerReady = false;
+        status.textContent = 'Desconectado';
+        status.style.color = '#e06060';
+        toast('⚠️ Desconectado del servidor');
+        state.ready = false;
       });
     });
   }
 
-  // --- FUNCIONES DEL JUEGO ---
+  // ============================================================
+  //  FUNCIONES DE JUEGO
+  // ============================================================
   function addPlayer(name, team, id) {
-    // id es el peerId del jugador (tanto host como clientes lo tienen)
-    if (!name.trim()) { showToast('❌ Escribe un nombre'); return false; }
-    if (state.isJoined) { showToast('⚠️ Ya estás en la partida'); return false; }
-    const exists = state.players.some(p => p.name.toLowerCase() === name.trim().toLowerCase());
-    if (exists) { showToast(`❌ El nombre "${name.trim()}" ya está en uso`); return false; }
-
-    const x = team === 'rojo' ? 150 : CANVAS_WIDTH - 150;
-    const y = CANVAS_HEIGHT/2 + (Math.random()*60 - 30);
+    if (!name.trim()) { toast('❌ Escribe un nombre'); return false; }
+    if (state.isJoined) { toast('⚠️ Ya estás en la partida'); return false; }
+    if (state.players.some(p => p.name.toLowerCase() === name.trim().toLowerCase())) {
+      toast(`❌ El nombre "${name.trim()}" ya está en uso`);
+      return false;
+    }
+    const x = team === 'rojo' ? 150 : W - 150;
+    const y = H/2 + (Math.random()*60 - 30);
     const player = new Player(id, name.trim(), team, x, y);
     state.players.push(player);
-    state.localPlayerId = id;
+    state.localId = id;
     state.isJoined = true;
 
     // UI
@@ -174,9 +277,9 @@
     teamBtns.forEach(b => b.style.pointerEvents = 'none');
     hostBtn.disabled = true;
     connectBtn.disabled = true;
-    roomIdInput.disabled = true;
+    roomInput.disabled = true;
 
-    // Si no es host, notificar al host que nos unimos
+    // Si no soy host, avisar al host
     if (!state.isHost && state.connections.length > 0) {
       state.connections.forEach(conn => {
         if (conn.open) {
@@ -187,7 +290,7 @@
         }
       });
     }
-    updateUI();
+    renderUI();
     return true;
   }
 
@@ -196,14 +299,13 @@
     if (!state.isHost && state.connections.length > 0) {
       state.connections.forEach(conn => {
         if (conn.open) {
-          conn.send({ type: 'PLAYER_LEAVE', payload: { id: state.localPlayerId } });
+          conn.send({ type: 'PLAYER_LEAVE', payload: { id: state.localId } });
         }
       });
     }
-    state.players = state.players.filter(p => p.id !== state.localPlayerId);
-    state.localPlayerId = null;
+    state.players = state.players.filter(p => p.id !== state.localId);
+    state.localId = null;
     state.isJoined = false;
-    // UI
     nameInput.disabled = false;
     joinBtn.style.display = 'none';
     joinBtn.disabled = false;
@@ -211,177 +313,226 @@
     teamBtns.forEach(b => b.style.pointerEvents = 'auto');
     hostBtn.disabled = false;
     connectBtn.disabled = false;
-    roomIdInput.disabled = false;
+    roomInput.disabled = false;
     if (state.players.length === 0) resetBall();
-    updateUI();
+    renderUI();
   }
 
-  // --- FÍSICA (solo host) ---
+  // ============================================================
+  //  FÍSICA (solo ejecutada por el host)
+  // ============================================================
   function updatePhysics() {
     const ball = state.ball;
+
     // Aplicar inputs a cada jugador
-    state.players.forEach(player => {
-      let inputs;
-      if (player.id === state.localPlayerId) {
-        inputs = localInputs;
+    state.players.forEach(p => {
+      let inp;
+      if (p.id === state.localId) {
+        inp = localInputs;
       } else {
-        inputs = playerInputs[player.id] || { up:false, down:false, left:false, right:false, kick:false };
+        inp = inputsBuffer[p.id] || { up:false, down:false, left:false, right:false, kick:false };
       }
-      let moveX=0, moveY=0;
-      if (inputs.up) moveY -= 1;
-      if (inputs.down) moveY += 1;
-      if (inputs.left) moveX -= 1;
-      if (inputs.right) moveX += 1;
-      if (moveX!==0 || moveY!==0) {
-        const dir = normalize({x:moveX, y:moveY});
-        player.vel.x += dir.x * 0.5;
-        player.vel.y += dir.y * 0.5;
-        const speed = mag(player.vel);
-        if (speed > PLAYER_SPEED) player.vel = mul(player.vel, PLAYER_SPEED/speed);
+      let dx=0, dy=0;
+      if (inp.up) dy -= 1;
+      if (inp.down) dy += 1;
+      if (inp.left) dx -= 1;
+      if (inp.right) dx += 1;
+      if (dx!==0 || dy!==0) {
+        const dir = norm({x:dx, y:dy});
+        p.vel.x += dir.x * 0.5;
+        p.vel.y += dir.y * 0.5;
+        const spd = mag(p.vel);
+        if (spd > SPEED) p.vel = mul(p.vel, SPEED/spd);
       }
-      player.kicking = inputs.kick;
-      player.update();
-      player.pos.x = clamp(player.pos.x, player.radius, CANVAS_WIDTH - player.radius);
-      player.pos.y = clamp(player.pos.y, player.radius, CANVAS_HEIGHT - player.radius);
+      p.kicking = inp.kick;
+      p.update();
+      p.pos.x = clamp(p.pos.x, p.radius, W - p.radius);
+      p.pos.y = clamp(p.pos.y, p.radius, H - p.radius);
     });
 
     // Pelota
     ball.update();
-    if (ball.pos.y < ball.radius || ball.pos.y > CANVAS_HEIGHT - ball.radius) {
-      ball.vel.y *= -WALL_BOUNCE;
-      ball.pos.y = ball.pos.y < ball.radius ? ball.radius : CANVAS_HEIGHT - ball.radius;
+    if (ball.pos.y < ball.radius || ball.pos.y > H - ball.radius) {
+      ball.vel.y *= -BOUNCE;
+      ball.pos.y = ball.pos.y < ball.radius ? ball.radius : H - ball.radius;
     }
-    const inGoalY = ball.pos.y > (CANVAS_HEIGHT - GOAL_SIZE)/2 && ball.pos.y < (CANVAS_HEIGHT + GOAL_SIZE)/2;
+    const inGoalY = ball.pos.y > (H - GOAL_H)/2 && ball.pos.y < (H + GOAL_H)/2;
     if (ball.pos.x < ball.radius) {
       if (inGoalY) { state.score.azul++; resetPositions(); return; }
-      else { ball.vel.x *= -WALL_BOUNCE; ball.pos.x = ball.radius; }
-    } else if (ball.pos.x > CANVAS_WIDTH - ball.radius) {
+      else { ball.vel.x *= -BOUNCE; ball.pos.x = ball.radius; }
+    } else if (ball.pos.x > W - ball.radius) {
       if (inGoalY) { state.score.rojo++; resetPositions(); return; }
-      else { ball.vel.x *= -WALL_BOUNCE; ball.pos.x = CANVAS_WIDTH - ball.radius; }
+      else { ball.vel.x *= -BOUNCE; ball.pos.x = W - ball.radius; }
     }
 
     // Colisiones jugador-jugador
     for (let i=0; i<state.players.length; i++) {
       for (let j=i+1; j<state.players.length; j++) {
-        const p1=state.players[i], p2=state.players[j];
-        if (dist(p1.pos, p2.pos) < p1.radius + p2.radius) {
-          const result = resolveCollision(p1.pos, p1.vel, p1.mass, p2.pos, p2.vel, p2.mass);
-          p1.vel = result.v1; p2.vel = result.v2;
-          const overlap = (p1.radius + p2.radius) - dist(p1.pos, p2.pos);
-          const dir = normalize(sub(p1.pos, p2.pos));
-          p1.pos = add(p1.pos, mul(dir, overlap/2));
-          p2.pos = sub(p2.pos, mul(dir, overlap/2));
+        const a=state.players[i], b=state.players[j];
+        if (dist(a.pos, b.pos) < a.radius + b.radius) {
+          const res = resolveCollision(a.pos, a.vel, a.mass, b.pos, b.vel, b.mass);
+          a.vel = res.v1; b.vel = res.v2;
+          const overlap = (a.radius + b.radius) - dist(a.pos, b.pos);
+          const dir = norm(sub(a.pos, b.pos));
+          a.pos = add(a.pos, mul(dir, overlap/2));
+          b.pos = sub(b.pos, mul(dir, overlap/2));
         }
       }
     }
     // Colisiones jugador-pelota
-    state.players.forEach(player => {
-      if (dist(player.pos, ball.pos) < player.radius + ball.radius) {
-        const result = resolveCollision(player.pos, player.vel, player.mass, ball.pos, ball.vel, ball.mass);
-        ball.vel = result.v2;
-        if (player.kicking) {
-          const dir = normalize(sub(ball.pos, player.pos));
-          ball.vel = add(ball.vel, mul(dir, KICK_POWER));
+    state.players.forEach(p => {
+      if (dist(p.pos, ball.pos) < p.radius + ball.radius) {
+        const res = resolveCollision(p.pos, p.vel, p.mass, ball.pos, ball.vel, ball.mass);
+        ball.vel = res.v2;
+        if (p.kicking) {
+          const dir = norm(sub(ball.pos, p.pos));
+          ball.vel = add(ball.vel, mul(dir, KICK));
         }
-        const overlap = (player.radius + ball.radius) - dist(player.pos, ball.pos);
-        const dir = normalize(sub(ball.pos, player.pos));
+        const overlap = (p.radius + ball.radius) - dist(p.pos, ball.pos);
+        const dir = norm(sub(ball.pos, p.pos));
         ball.pos = add(ball.pos, mul(dir, overlap + 0.5));
       }
     });
   }
 
   function resetPositions() {
-    state.ball.pos = {x: CANVAS_WIDTH/2, y: CANVAS_HEIGHT/2};
+    state.ball.pos = {x: W/2, y: H/2};
     state.ball.vel = {x:0, y:0};
     state.players.forEach(p => {
-      p.pos = {x: p.team==='rojo' ? 150 : CANVAS_WIDTH-150, y: CANVAS_HEIGHT/2 + (Math.random()*60-30)};
+      p.pos = {x: p.team==='rojo' ? 150 : W-150, y: H/2 + (Math.random()*60-30)};
       p.vel = {x:0, y:0};
     });
   }
   function resetBall() {
-    state.ball.pos = {x: CANVAS_WIDTH/2, y: CANVAS_HEIGHT/2};
+    state.ball.pos = {x: W/2, y: H/2};
     state.ball.vel = {x:0, y:0};
   }
 
-  // --- RENDER ---
+  // ============================================================
+  //  RENDER
+  // ============================================================
   function draw() {
-    const W=CANVAS_WIDTH, H=CANVAS_HEIGHT;
-    ctx.fillStyle='#1d5e2e'; ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#256d37'; const stripWidth=W/15; for(let i=0;i<15;i+=2) ctx.fillRect(i*stripWidth,0,stripWidth,H);
-    ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.strokeRect(10,10,W-20,H-20);
+    // Fondo y líneas
+    ctx.fillStyle = '#1d5e2e';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#256d37';
+    const sw = W/15;
+    for (let i=0; i<15; i+=2) ctx.fillRect(i*sw, 0, sw, H);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 3;
+    ctx.strokeRect(10,10,W-20,H-20);
     ctx.beginPath(); ctx.moveTo(W/2,10); ctx.lineTo(W/2,H-10); ctx.stroke();
     ctx.beginPath(); ctx.arc(W/2,H/2,70,0,Math.PI*2); ctx.stroke();
-    ctx.fillStyle='#c0392b'; ctx.fillRect(0,(H-GOAL_SIZE)/2,10,GOAL_SIZE);
-    ctx.fillStyle='#2980b9'; ctx.fillRect(W-10,(H-GOAL_SIZE)/2,10,GOAL_SIZE);
-    ctx.strokeStyle='#fff'; ctx.lineWidth=4; ctx.strokeRect(0,(H-GOAL_SIZE)/2,10,GOAL_SIZE);
-    ctx.strokeRect(W-10,(H-GOAL_SIZE)/2,10,GOAL_SIZE);
-    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(W/2-60,8,120,32);
-    ctx.fillStyle='#fff'; ctx.font='bold 18px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillStyle = '#c0392b';
+    ctx.fillRect(0,(H-GOAL_H)/2,10,GOAL_H);
+    ctx.fillStyle = '#2980b9';
+    ctx.fillRect(W-10,(H-GOAL_H)/2,10,GOAL_H);
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(0,(H-GOAL_H)/2,10,GOAL_H);
+    ctx.strokeRect(W-10,(H-GOAL_H)/2,10,GOAL_H);
+    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+    ctx.fillRect(W/2-60,8,120,32);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 18px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
     ctx.fillText(`${state.score.rojo} - ${state.score.azul}`, W/2, 24);
 
+    // Jugadores
     state.players.forEach(p => {
-      const color = p.team==='rojo' ? '#e74c3c' : '#3498db';
-      ctx.shadowColor='rgba(0,0,0,0.3)'; ctx.shadowBlur=10;
-      ctx.beginPath(); ctx.arc(p.pos.x, p.pos.y, p.radius, 0, Math.PI*2);
-      ctx.fillStyle=color; ctx.fill();
-      ctx.shadowBlur=0; ctx.strokeStyle='#111'; ctx.lineWidth=2; ctx.stroke();
-      if (p.kicking) { ctx.beginPath(); ctx.arc(p.pos.x, p.pos.y, p.radius+4, 0, Math.PI*2); ctx.strokeStyle='#fff'; ctx.lineWidth=1.5; ctx.stroke(); }
-      ctx.fillStyle='#fff'; ctx.font='bold 11px sans-serif'; ctx.textAlign='center';
-      ctx.shadowColor='rgba(0,0,0,0.8)'; ctx.shadowBlur=4;
+      const color = p.team === 'rojo' ? '#e74c3c' : '#3498db';
+      ctx.shadowColor = 'rgba(0,0,0,0.3)';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.arc(p.pos.x, p.pos.y, p.radius, 0, Math.PI*2);
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = '#111';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      if (p.kicking) {
+        ctx.beginPath();
+        ctx.arc(p.pos.x, p.pos.y, p.radius+4, 0, Math.PI*2);
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 4;
       ctx.fillText(p.name, p.pos.x, p.pos.y - p.radius - 6);
-      ctx.shadowBlur=0;
-      if (p.id === state.localPlayerId) {
-        ctx.fillStyle='#ffdd57'; ctx.font='bold 9px sans-serif';
+      ctx.shadowBlur = 0;
+      if (p.id === state.localId) {
+        ctx.fillStyle = '#ffdd57';
+        ctx.font = 'bold 9px sans-serif';
         ctx.fillText('★ TÚ', p.pos.x, p.pos.y + p.radius + 14);
       }
     });
 
-    const b=state.ball;
-    ctx.shadowColor='rgba(0,0,0,0.4)'; ctx.shadowBlur=18;
-    ctx.beginPath(); ctx.arc(b.pos.x, b.pos.y, b.radius, 0, Math.PI*2);
-    ctx.fillStyle='#fff'; ctx.fill();
-    ctx.shadowBlur=0; ctx.strokeStyle='#222'; ctx.lineWidth=2; ctx.stroke();
-    ctx.beginPath(); ctx.arc(b.pos.x-3, b.pos.y-3, 3, 0, Math.PI*2); ctx.fillStyle='#ddd'; ctx.fill();
+    // Pelota
+    const b = state.ball;
+    ctx.shadowColor = 'rgba(0,0,0,0.4)';
+    ctx.shadowBlur = 18;
+    ctx.beginPath();
+    ctx.arc(b.pos.x, b.pos.y, b.radius, 0, Math.PI*2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(b.pos.x-3, b.pos.y-3, 3, 0, Math.PI*2);
+    ctx.fillStyle = '#ddd';
+    ctx.fill();
   }
 
-  // --- UI ---
-  function renderPlayerList() {
-    if (state.players.length===0) {
-      playerListContainer.innerHTML = '<span style="color:#6f9eb0;font-size:0.8rem;opacity:0.7;">👥 Sin jugadores</span>';
-      return;
+  // ============================================================
+  //  UI
+  // ============================================================
+  function renderUI() {
+    if (state.players.length === 0) {
+      playerList.innerHTML = '<span style="color:#6f9eb0;font-size:.8rem;opacity:.7;">👥 Sin jugadores</span>';
+    } else {
+      let html = '';
+      state.players.forEach(p => {
+        const dot = p.team === 'azul' ? 'dot' : 'dot rojo';
+        const you = p.id === state.localId ? '<span class="you">TÚ</span>' : '';
+        html += `<span class="player-tag"><span class="${dot}"></span>${p.name}${you}</span>`;
+      });
+      playerList.innerHTML = html;
     }
-    let html='';
-    state.players.forEach(p => {
-      const dotClass = p.team==='azul' ? 'dot' : 'dot rojo';
-      const youTag = p.id === state.localPlayerId ? '<span class="you">TÚ</span>' : '';
-      html += `<span class="player-tag"><span class="${dotClass}"></span>${p.name}${youTag}</span>`;
-    });
-    playerListContainer.innerHTML = html;
     playerCount.textContent = `Jugadores: ${state.players.length}`;
   }
-  function updateUI(){ renderPlayerList(); }
 
-  // --- GAME LOOP ---
+  // ============================================================
+  //  GAME LOOP
+  // ============================================================
   function gameLoop() {
     if (state.isHost) {
       updatePhysics();
-      const gameState = {
+      // Broadcast estado
+      const payload = {
         players: state.players.map(p => p.toJSON()),
         ball: state.ball.toJSON(),
         score: state.score
       };
-      state.connections.forEach(conn => {
-        if (conn.open) conn.send({ type: 'STATE_UPDATE', payload: gameState });
+      state.connections.forEach(c => {
+        if (c.open) c.send({ type: 'STATE_UPDATE', payload });
       });
     } else {
-      // Cliente: enviar inputs al host
+      // Cliente: enviar inputs
       const now = Date.now();
       if (now - state.lastInputSend > 50) {
-        state.connections.forEach(conn => {
-          if (conn.open) {
-            conn.send({
+        state.connections.forEach(c => {
+          if (c.open) {
+            c.send({
               type: 'INPUT',
-              payload: { id: state.localPlayerId, inputs: localInputs }
+              payload: { id: state.localId, inputs: localInputs }
             });
           }
         });
@@ -389,95 +540,98 @@
       }
     }
     draw();
-    animationId = requestAnimationFrame(gameLoop);
+    loopId = requestAnimationFrame(gameLoop);
   }
 
-  function startGameLoop() {
-    if (!isGameLoopRunning) { isGameLoopRunning = true; gameLoop(); }
+  function startLoop() {
+    if (!loopId) gameLoop();
   }
 
-  // --- MANEJO DE CONEXIONES (HOST) ---
-  function setupHostConnections() {
+  // ============================================================
+  //  MANEJO DE CONEXIONES (HOST)
+  // ============================================================
+  function setupHost() {
     state.peer.on('connection', (conn) => {
       state.connections.push(conn);
-      connectionStatus.textContent = `Host: ${state.connections.length} conectados`;
-      connectionStatus.style.color = '#7fc1db';
+      status.textContent = `Host: ${state.connections.length} conectados`;
+      status.style.color = '#7fc1db';
+      console.log('[Host] Nueva conexión:', conn.peer);
 
       conn.on('data', (data) => {
         console.log('[Host] Recibido:', data.type, data.payload);
         if (data.type === 'PLAYER_JOIN') {
-          // Cliente se une con su peerId como id
           const { id, name, team } = data.payload;
-          // Verificar si ya existe
           if (state.players.some(p => p.id === id)) {
-            console.warn('Jugador ya existe:', id);
+            console.warn('[Host] Jugador ya existe:', id);
             return;
           }
-          const x = team === 'rojo' ? 150 : CANVAS_WIDTH - 150;
-          const y = CANVAS_HEIGHT/2 + (Math.random()*60 - 30);
+          const x = team === 'rojo' ? 150 : W - 150;
+          const y = H/2 + (Math.random()*60 - 30);
           const player = new Player(id, name, team, x, y);
           state.players.push(player);
-          // Enviar estado completo al nuevo cliente
-          const gameState = {
+          // Enviar estado completo
+          const fullState = {
             players: state.players.map(p => p.toJSON()),
             ball: state.ball.toJSON(),
             score: state.score
           };
-          conn.send({ type: 'INIT_STATE', payload: gameState });
-          // Notificar a otros clientes
+          conn.send({ type: 'INIT_STATE', payload: fullState });
+          // Notificar a otros
           state.connections.forEach(c => {
             if (c !== conn && c.open) {
               c.send({ type: 'PLAYER_JOIN', payload: player.toJSON() });
             }
           });
-          updateUI();
-          showToast(`👤 ${player.name} se unió al juego`);
+          renderUI();
+          toast(`👤 ${player.name} se unió`);
         } else if (data.type === 'PLAYER_LEAVE') {
           const id = data.payload.id;
           const leaving = state.players.find(p => p.id === id);
           state.players = state.players.filter(p => p.id !== id);
-          delete playerInputs[id];
+          delete inputsBuffer[id];
           state.connections.forEach(c => {
             if (c.open) c.send({ type: 'PLAYER_LEAVE', payload: { id } });
           });
-          updateUI();
-          if (leaving) showToast(`👋 ${leaving.name} abandonó`);
+          renderUI();
+          if (leaving) toast(`👋 ${leaving.name} abandonó`);
         } else if (data.type === 'INPUT') {
           const { id, inputs } = data.payload;
           if (id) {
-            playerInputs[id] = inputs;
+            inputsBuffer[id] = inputs;
           }
         }
       });
 
       conn.on('close', () => {
         state.connections = state.connections.filter(c => c !== conn);
-        connectionStatus.textContent = `Host: ${state.connections.length} conectados`;
-        connectionStatus.style.color = '#7fc1db';
-        showToast('👋 Un jugador se ha desconectado');
+        status.textContent = `Host: ${state.connections.length} conectados`;
+        status.style.color = '#7fc1db';
+        toast('👋 Un jugador se ha desconectado');
       });
     });
   }
 
-  // --- CONECTARSE COMO CLIENTE ---
+  // ============================================================
+  //  CONECTARSE COMO CLIENTE
+  // ============================================================
   function connectToHost(hostId) {
-    if (!state.peer || !state.isPeerReady) {
-      showToast('❌ Esperando conexión...');
+    if (!state.peer || !state.ready) {
+      toast('❌ Esperando conexión...');
       return;
     }
     const conn = state.peer.connect(hostId);
     conn.on('open', () => {
       state.connections.push(conn);
-      connectionStatus.textContent = 'Conectado al host';
-      connectionStatus.style.color = '#7fc1db';
-      showToast('✅ Conectado a la sala');
-      roomIdDisplay.textContent = `Sala: ${hostId}`;
-      // Enviar JOIN con nuestro peerId y nombre/equipo elegido
+      status.textContent = 'Conectado al host';
+      status.style.color = '#7fc1db';
+      toast('✅ Conectado a la sala');
+      roomDisplay.textContent = `Sala: ${hostId}`;
+      // Enviar JOIN
       const name = nameInput.value.trim() || 'Jugador';
       const team = selectedTeam;
       conn.send({
         type: 'PLAYER_JOIN',
-        payload: { id: state.localPlayerId, name, team }
+        payload: { id: state.localId, name, team }
       });
     });
 
@@ -488,9 +642,9 @@
         state.players = payload.players.map(p => Player.fromJSON(p));
         state.ball = Ball.fromJSON(payload.ball);
         state.score = payload.score;
-        // Confirmar que nuestro jugador existe
-        const myPlayer = state.players.find(p => p.id === state.localPlayerId);
-        if (myPlayer) {
+        // Verificar que nuestro jugador esté en la lista
+        const me = state.players.find(p => p.id === state.localId);
+        if (me) {
           state.isJoined = true;
           nameInput.disabled = true;
           joinBtn.style.display = 'inline-block';
@@ -500,43 +654,43 @@
           teamBtns.forEach(b => b.style.pointerEvents = 'none');
           hostBtn.disabled = true;
           connectBtn.disabled = true;
-          roomIdInput.disabled = true;
+          roomInput.disabled = true;
         } else {
-          console.warn('No se encontró nuestro jugador en el estado inicial');
+          console.warn('[Cliente] No me encontré en el estado inicial');
         }
-        updateUI();
-        startGameLoop();
-        showToast('🎮 ¡Partida iniciada!');
+        renderUI();
+        startLoop();
+        toast('🎮 ¡Partida iniciada!');
       } else if (data.type === 'STATE_UPDATE') {
         const payload = data.payload;
         state.players = payload.players.map(p => Player.fromJSON(p));
         state.ball = Ball.fromJSON(payload.ball);
         state.score = payload.score;
-        updateUI();
+        renderUI();
       } else if (data.type === 'PLAYER_JOIN') {
-        const player = Player.fromJSON(data.payload);
-        if (!state.players.some(p => p.id === player.id)) {
-          state.players.push(player);
-          updateUI();
-          showToast(`👤 ${player.name} se unió`);
+        const p = Player.fromJSON(data.payload);
+        if (!state.players.some(pl => pl.id === p.id)) {
+          state.players.push(p);
+          renderUI();
+          toast(`👤 ${p.name} se unió`);
         }
       } else if (data.type === 'PLAYER_LEAVE') {
         const id = data.payload.id;
         const leaving = state.players.find(p => p.id === id);
         state.players = state.players.filter(p => p.id !== id);
-        updateUI();
-        if (leaving) showToast(`👋 ${leaving.name} abandonó`);
+        renderUI();
+        if (leaving) toast(`👋 ${leaving.name} abandonó`);
       }
     });
 
     conn.on('close', () => {
       state.connections = state.connections.filter(c => c !== conn);
-      connectionStatus.textContent = 'Desconectado del host';
-      connectionStatus.style.color = '#e06060';
-      showToast('⚠️ Desconectado del host');
+      status.textContent = 'Desconectado del host';
+      status.style.color = '#e06060';
+      toast('⚠️ Desconectado del host');
       state.players = [];
       state.isJoined = false;
-      state.localPlayerId = null;
+      state.localId = null;
       nameInput.disabled = false;
       joinBtn.style.display = 'none';
       joinBtn.disabled = false;
@@ -544,33 +698,45 @@
       teamBtns.forEach(b => b.style.pointerEvents = 'auto');
       hostBtn.disabled = false;
       connectBtn.disabled = false;
-      roomIdInput.disabled = false;
-      updateUI();
+      roomInput.disabled = false;
+      renderUI();
     });
 
     conn.on('error', (err) => {
-      showToast('❌ Error de conexión: '+err.message);
-      connectionStatus.textContent = 'Error de conexión';
-      connectionStatus.style.color = '#e06060';
+      toast('❌ Error de conexión: '+err.message);
+      status.textContent = 'Error de conexión';
+      status.style.color = '#e06060';
     });
   }
 
-  // --- INICIALIZACIÓN ---
+  // ============================================================
+  //  INICIO
+  // ============================================================
   async function init() {
+    // Activar equipo azul por defecto
     document.querySelector('.team-btn.azul')?.classList.add('active');
 
     try {
       await initPeer();
-      connectionStatus.textContent = 'Listo';
-      connectionStatus.style.color = '#7fc1db';
-      console.log('Peer ID:', state.localPlayerId);
-    } catch(err) {
-      console.error(err);
-      connectionStatus.textContent = 'Error';
-      connectionStatus.style.color = '#e06060';
+      status.textContent = 'Listo';
+      status.style.color = '#7fc1db';
+      console.log('[Init] Peer ID:', state.localId);
+    } catch (e) {
+      console.error(e);
+      status.textContent = 'Error';
+      status.style.color = '#e06060';
     }
 
-    // Eventos UI
+    // ---- Detectar si hay parámetro ?room= en la URL ----
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomFromUrl = urlParams.get('room');
+    if (roomFromUrl) {
+      roomInput.value = roomFromUrl;
+      // Conectar automáticamente después de un breve momento
+      setTimeout(() => connectBtn.click(), 500);
+    }
+
+    // ---- Eventos UI ----
     teamBtns.forEach(btn => {
       btn.addEventListener('click', function() {
         if (state.isJoined) return;
@@ -582,38 +748,48 @@
 
     hostBtn.addEventListener('click', () => {
       if (state.isJoined) return;
-      if (!state.peer || !state.isPeerReady) {
-        showToast('❌ Esperando conexión...');
+      if (!state.peer || !state.ready) {
+        toast('❌ Esperando conexión...');
         return;
       }
       state.isHost = true;
-      connectionStatus.textContent = 'Host activo';
-      connectionStatus.style.color = '#7fc1db';
-      showToast('🏠 Sala creada! Comparte el ID');
-      setupHostConnections();
+      status.textContent = 'Host activo';
+      status.style.color = '#7fc1db';
+      toast('🏠 Sala creada! Comparte el enlace');
+      setupHost();
       const name = nameInput.value.trim() || 'Host';
-      addPlayer(name, selectedTeam, state.localPlayerId);
+      addPlayer(name, selectedTeam, state.localId);
       hostBtn.style.display = 'none';
       connectBtn.style.display = 'none';
-      roomIdInput.style.display = 'none';
-      startGameLoop();
+      roomInput.style.display = 'none';
+      // Actualizar enlace de copia
+      const link = window.location.origin + window.location.pathname + '?room=' + state.roomId;
+      copyBtn.textContent = '📋 Copiar enlace';
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(link).then(() => toast('✅ Enlace copiado'));
+      };
+      startLoop();
     });
 
     connectBtn.addEventListener('click', () => {
-      const roomId = roomIdInput.value.trim();
-      if (!roomId) { showToast('❌ Ingresa un ID de sala'); return; }
+      const roomId = roomInput.value.trim();
+      if (!roomId) { toast('❌ Ingresa un ID de sala'); return; }
       connectToHost(roomId);
     });
 
-    roomIdInput.addEventListener('keydown', (e) => {
+    roomInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') connectBtn.click();
     });
 
     leaveBtn.addEventListener('click', removeLocalPlayer);
-    copyRoomBtn.addEventListener('click', () => {
-      if (state.roomId) {
-        navigator.clipboard.writeText(state.roomId).then(() => showToast('✅ ID copiado'))
-          .catch(() => { /* fallback */ });
+
+    // También copiar el enlace con el botón de copiar (cuando sea host)
+    copyBtn.addEventListener('click', () => {
+      if (state.isHost && state.roomId) {
+        const link = window.location.origin + window.location.pathname + '?room=' + state.roomId;
+        navigator.clipboard.writeText(link).then(() => toast('✅ Enlace copiado'));
+      } else if (state.roomId) {
+        navigator.clipboard.writeText(state.roomId).then(() => toast('✅ ID copiado'));
       }
     });
 
@@ -631,7 +807,7 @@
       if (['arrowup','arrowdown','arrowleft','arrowright',' ','w','a','s','d'].includes(key) || e.key.startsWith('Arrow')) {
         e.preventDefault();
       }
-      switch(key) {
+      switch (key) {
         case 'arrowup': case 'w': localInputs.up = true; break;
         case 'arrowdown': case 's': localInputs.down = true; break;
         case 'arrowleft': case 'a': localInputs.left = true; break;
@@ -642,7 +818,7 @@
     document.addEventListener('keyup', (e) => {
       if (e.target.tagName === 'INPUT') return;
       const key = e.key.toLowerCase();
-      switch(key) {
+      switch (key) {
         case 'arrowup': case 'w': localInputs.up = false; break;
         case 'arrowdown': case 's': localInputs.down = false; break;
         case 'arrowleft': case 'a': localInputs.left = false; break;
@@ -655,8 +831,11 @@
       if (e.key === ' ' || e.key.startsWith('Arrow')) e.preventDefault();
     }, { passive: false });
 
-    updateUI();
-    startGameLoop();
+    renderUI();
+    // Si no hay host y no hay room en URL, mostrar estado inicial
+    if (!roomFromUrl) {
+      startLoop(); // dibujar cancha vacía
+    }
   }
 
   init();
