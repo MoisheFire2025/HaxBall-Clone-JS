@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>HaxBall · Mejorado</title>
+  <title>HaxBall Multiplayer · PeerJS</title>
+  <!-- PeerJS CDN -->
+  <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
   <style>
     * {
       box-sizing: border-box;
@@ -31,7 +33,43 @@
       width: 100%;
     }
 
-    /* Panel superior */
+    .status-bar {
+      background: #0f2633;
+      border-radius: 60px;
+      padding: 10px 18px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      color: #8db9cc;
+      font-size: 0.85rem;
+    }
+
+    .status-bar .room-id {
+      background: #1a3a47;
+      padding: 4px 14px;
+      border-radius: 30px;
+      font-family: monospace;
+      color: #7fc1db;
+    }
+
+    .status-bar .copy-btn {
+      background: #264f5e;
+      border: none;
+      color: #c3e2f0;
+      padding: 4px 12px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: 0.1s;
+    }
+
+    .status-bar .copy-btn:active {
+      transform: scale(0.95);
+    }
+
     .player-panel {
       background: #0f2633;
       border-radius: 60px;
@@ -115,52 +153,79 @@
       box-shadow: 0 0 8px #e06060;
     }
 
-    .join-btn {
-      background: #3f8a6b;
+    .action-btn {
       border: none;
       border-radius: 40px;
       padding: 8px 20px;
       font-weight: 700;
-      color: white;
       font-size: 0.95rem;
       cursor: pointer;
-      box-shadow: 0 4px 0 #1f4f3a, inset 0 1px 2px #a5e0c0;
       transition: 0.08s linear;
       letter-spacing: 0.5px;
       flex: 0 1 auto;
     }
 
-    .join-btn:active {
+    .action-btn:active {
       transform: translateY(3px);
-      box-shadow: 0 1px 0 #1f4f3a;
     }
 
-    .join-btn:disabled {
+    .action-btn:disabled {
       opacity: 0.5;
       transform: translateY(2px);
-      box-shadow: 0 2px 0 #1f4f3a;
       cursor: not-allowed;
     }
 
-    .leave-btn {
-      background: #8a3f3f;
-      border: none;
-      border-radius: 40px;
-      padding: 8px 20px;
-      font-weight: 700;
+    .action-btn.join {
+      background: #3f8a6b;
       color: white;
-      font-size: 0.95rem;
-      cursor: pointer;
+      box-shadow: 0 4px 0 #1f4f3a, inset 0 1px 2px #a5e0c0;
+    }
+
+    .action-btn.join:active {
+      box-shadow: 0 1px 0 #1f4f3a;
+    }
+
+    .action-btn.leave {
+      background: #8a3f3f;
+      color: white;
       box-shadow: 0 4px 0 #4f1f1f, inset 0 1px 2px #e0a5a5;
-      transition: 0.08s linear;
-      letter-spacing: 0.5px;
-      flex: 0 1 auto;
       display: none;
     }
 
-    .leave-btn:active {
-      transform: translateY(3px);
+    .action-btn.leave:active {
       box-shadow: 0 1px 0 #4f1f1f;
+    }
+
+    .action-btn.host {
+      background: #3f6b8a;
+      color: white;
+      box-shadow: 0 4px 0 #1f3f4f, inset 0 1px 2px #a5c0e0;
+    }
+
+    .action-btn.host:active {
+      box-shadow: 0 1px 0 #1f3f4f;
+    }
+
+    .action-btn.connect {
+      background: #6b8a3f;
+      color: white;
+      box-shadow: 0 4px 0 #3f4f1f, inset 0 1px 2px #c0e0a5;
+    }
+
+    .action-btn.connect:active {
+      box-shadow: 0 1px 0 #3f4f1f;
+    }
+
+    .join-input-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .join-input-group input {
+      min-width: 100px;
+      flex: 0 1 120px;
     }
 
     .player-list {
@@ -205,7 +270,6 @@
       color: white;
     }
 
-    /* CANCHA */
     .canvas-container {
       background: #1f4f5e;
       border-radius: 40px;
@@ -250,6 +314,37 @@
       font-size: 0.7rem;
     }
 
+    .info-footer .player-count {
+      background: #1a3a47;
+      padding: 2px 12px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #1f3a4b;
+      color: #eaf6fc;
+      padding: 12px 24px;
+      border-radius: 40px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      border: 1px solid #3b6a7c;
+      z-index: 999;
+      animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+      from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+      to { transform: translateX(-50%) translateY(0); opacity: 1; }
+    }
+
     @media (max-width: 600px) {
       .player-panel {
         flex-direction: column;
@@ -259,22 +354,39 @@
         padding: 14px;
       }
       .team-selector { justify-content: center; }
-      .join-btn, .leave-btn { width: 100%; }
+      .action-btn { width: 100%; }
+      .join-input-group { flex-direction: column; }
+      .join-input-group input { width: 100%; }
+      .status-bar { flex-direction: column; align-items: stretch; text-align: center; }
       .info-footer .controls-hint span { font-size: 0.6rem; padding: 1px 8px; }
     }
   </style>
 </head>
 <body>
 <div class="game-wrapper">
-  <!-- Panel superior -->
+  <!-- Status Bar -->
+  <div class="status-bar" id="statusBar">
+    <span>🔗 Estado: <span id="connectionStatus">Desconectado</span></span>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+      <span class="room-id" id="roomIdDisplay">Sin sala</span>
+      <button class="copy-btn" id="copyRoomBtn" style="display:none;">📋 Copiar ID</button>
+    </div>
+  </div>
+
+  <!-- Panel de Jugadores -->
   <div class="player-panel" id="playerPanel">
     <input type="text" id="playerNameInput" placeholder="Tu nombre" value="Jugador" maxlength="14">
     <div class="team-selector">
       <button class="team-btn azul active" data-team="azul">🔵 Azul</button>
       <button class="team-btn rojo" data-team="rojo">🔴 Rojo</button>
     </div>
-    <button class="join-btn" id="joinBtn">➕ Unirse</button>
-    <button class="leave-btn" id="leaveBtn">🚪 Salir</button>
+    <button class="action-btn host" id="hostBtn">🏠 Crear Sala</button>
+    <div class="join-input-group">
+      <input type="text" id="roomIdInput" placeholder="ID de sala" maxlength="20">
+      <button class="action-btn connect" id="connectBtn">🔗 Unirse</button>
+    </div>
+    <button class="action-btn join" id="joinBtn" style="display:none;">➕ Unirse a la partida</button>
+    <button class="action-btn leave" id="leaveBtn">🚪 Salir</button>
     <div class="player-list" id="playerListContainer">
       <span style="color:#6f9eb0; font-size:0.8rem; opacity:0.7;">👥 Sin jugadores</span>
     </div>
@@ -290,7 +402,7 @@
       <span>⬆⬇⬅➡ / WASD</span>
       <span>⚡ Espacio: disparo</span>
     </div>
-    <button id="resetBallBtn" style="background:#264f5e;border:none;color:#c3e2f0;padding:6px 14px;border-radius:40px;cursor:pointer;">🔄 Reiniciar pelota</button>
+    <span class="player-count" id="playerCount">Jugadores: 0</span>
   </div>
 </div>
 
@@ -357,6 +469,24 @@
       this.vel.x *= FRICTION;
       this.vel.y *= FRICTION;
     }
+
+    toJSON() {
+      return {
+        id: this.id,
+        name: this.name,
+        team: this.team,
+        pos: this.pos,
+        vel: this.vel,
+        kicking: this.kicking
+      };
+    }
+
+    static fromJSON(data) {
+      const p = new Player(data.id, data.name, data.team, data.pos.x, data.pos.y);
+      p.vel = data.vel;
+      p.kicking = data.kicking;
+      return p;
+    }
   }
 
   class Ball {
@@ -373,6 +503,16 @@
       this.vel.x *= FRICTION;
       this.vel.y *= FRICTION;
     }
+
+    toJSON() {
+      return { pos: this.pos, vel: this.vel };
+    }
+
+    static fromJSON(data) {
+      const b = new Ball(data.pos.x, data.pos.y);
+      b.vel = data.vel;
+      return b;
+    }
   }
 
   // --- ESTADO DEL JUEGO ---
@@ -382,7 +522,11 @@
     nextId: 1,
     localPlayerId: null,
     isJoined: false,
-    score: { azul: 0, rojo: 0 }
+    isHost: false,
+    score: { azul: 0, rojo: 0 },
+    peer: null,
+    connections: [],
+    roomId: null
   };
 
   // Inputs locales
@@ -395,25 +539,90 @@
   const nameInput = document.getElementById('playerNameInput');
   const joinBtn = document.getElementById('joinBtn');
   const leaveBtn = document.getElementById('leaveBtn');
-  const resetBtn = document.getElementById('resetBallBtn');
+  const hostBtn = document.getElementById('hostBtn');
+  const connectBtn = document.getElementById('connectBtn');
+  const roomIdInput = document.getElementById('roomIdInput');
+  const roomIdDisplay = document.getElementById('roomIdDisplay');
+  const copyRoomBtn = document.getElementById('copyRoomBtn');
+  const connectionStatus = document.getElementById('connectionStatus');
+  const playerCount = document.getElementById('playerCount');
   const teamBtns = document.querySelectorAll('.team-btn');
 
   let selectedTeam = 'azul';
   let animationId = null;
+  let isGameLoopRunning = false;
 
-  // --- FUNCIONES DEL JUGADOR ---
+  // --- FUNCIONES DE RED ---
+  function updateConnectionStatus(text, color = '#8db9cc') {
+    connectionStatus.textContent = text;
+    connectionStatus.style.color = color;
+  }
+
+  function showToast(msg) {
+    const existing = document.querySelector('.toast');
+    if (existing) existing.remove();
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 3000);
+  }
+
+  function copyRoomId() {
+    if (state.roomId) {
+      navigator.clipboard.writeText(state.roomId).then(() => {
+        showToast('✅ ID de sala copiado');
+      }).catch(() => {
+        // Fallback
+        const textarea = document.createElement('textarea');
+        textarea.value = state.roomId;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        textarea.remove();
+        showToast('✅ ID de sala copiado');
+      });
+    }
+  }
+
+  // --- PEERJS ---
+  function initPeer() {
+    return new Promise((resolve) => {
+      const peer = new Peer();
+      peer.on('open', (id) => {
+        state.peer = peer;
+        state.roomId = id;
+        roomIdDisplay.textContent = `ID: ${id.substring(0, 8)}...`;
+        copyRoomBtn.style.display = 'inline-block';
+        updateConnectionStatus('Conectado a PeerJS', '#7fc1db');
+        resolve(peer);
+      });
+      peer.on('error', (err) => {
+        console.error('Peer error:', err);
+        updateConnectionStatus('Error de conexión', '#e06060');
+        showToast('❌ Error en PeerJS: ' + err.message);
+      });
+      peer.on('disconnected', () => {
+        updateConnectionStatus('Desconectado', '#e06060');
+        showToast('⚠️ Desconectado del servidor');
+      });
+    });
+  }
+
+  // --- FUNCIONES DEL JUEGO ---
   function addPlayer(name, team) {
     if (!name.trim()) {
-      alert('Escribe un nombre');
+      showToast('❌ Escribe un nombre');
       return false;
     }
     if (state.isJoined) {
-      alert('Ya estás en la partida. Usa "Salir" para cambiar.');
+      showToast('⚠️ Ya estás en la partida');
       return false;
     }
+
     const exists = state.players.some(p => p.name.toLowerCase() === name.trim().toLowerCase());
     if (exists) {
-      alert(`El nombre "${name.trim()}" ya está en la cancha.`);
+      showToast(`❌ El nombre "${name.trim()}" ya está en uso`);
       return false;
     }
 
@@ -424,11 +633,24 @@
     state.localPlayerId = player.id;
     state.isJoined = true;
 
-    // Deshabilitar inputs de unión
+    // UI
     nameInput.disabled = true;
-    joinBtn.disabled = true;
-    teamBtns.forEach(b => b.style.pointerEvents = 'none');
+    joinBtn.style.display = 'none';
     leaveBtn.style.display = 'inline-block';
+    teamBtns.forEach(b => b.style.pointerEvents = 'none');
+    hostBtn.disabled = true;
+    connectBtn.disabled = true;
+    roomIdInput.disabled = true;
+
+    // Notificar al host
+    if (!state.isHost && state.connections.length > 0) {
+      state.connections.forEach(conn => {
+        conn.send({
+          type: 'PLAYER_JOIN',
+          payload: player.toJSON()
+        });
+      });
+    }
 
     updateUI();
     return true;
@@ -436,27 +658,38 @@
 
   function removeLocalPlayer() {
     if (!state.isJoined) return;
+
+    // Notificar al host
+    if (!state.isHost && state.connections.length > 0) {
+      state.connections.forEach(conn => {
+        conn.send({
+          type: 'PLAYER_LEAVE',
+          payload: { id: state.localPlayerId }
+        });
+      });
+    }
+
     state.players = state.players.filter(p => p.id !== state.localPlayerId);
     state.localPlayerId = null;
     state.isJoined = false;
 
     nameInput.disabled = false;
-    joinBtn.disabled = false;
-    teamBtns.forEach(b => b.style.pointerEvents = 'auto');
+    joinBtn.style.display = 'none';
     leaveBtn.style.display = 'none';
+    teamBtns.forEach(b => b.style.pointerEvents = 'auto');
+    hostBtn.disabled = false;
+    connectBtn.disabled = false;
+    roomIdInput.disabled = false;
 
-    // Resetear pelota si no hay jugadores
     if (state.players.length === 0) {
       resetBall();
     }
     updateUI();
   }
 
-  // --- FÍSICA ---
   function updatePhysics() {
     const ball = state.ball;
 
-    // Actualizar jugadores con inputs
     state.players.forEach(player => {
       const isLocal = player.id === state.localPlayerId;
       const input = isLocal ? localInputs : { up: false, down: false, left: false, right: false, kick: false };
@@ -480,21 +713,17 @@
       player.kicking = input.kick;
       player.update();
 
-      // Límites
       player.pos.x = clamp(player.pos.x, player.radius, CANVAS_WIDTH - player.radius);
       player.pos.y = clamp(player.pos.y, player.radius, CANVAS_HEIGHT - player.radius);
     });
 
-    // Actualizar pelota
     ball.update();
 
-    // Rebotes de la pelota
     if (ball.pos.y < ball.radius || ball.pos.y > CANVAS_HEIGHT - ball.radius) {
       ball.vel.y *= -WALL_BOUNCE;
       ball.pos.y = ball.pos.y < ball.radius ? ball.radius : CANVAS_HEIGHT - ball.radius;
     }
 
-    // Gol / rebote en porterías
     const inGoalY = ball.pos.y > (CANVAS_HEIGHT - GOAL_SIZE) / 2 && ball.pos.y < (CANVAS_HEIGHT + GOAL_SIZE) / 2;
     if (ball.pos.x < ball.radius) {
       if (inGoalY) {
@@ -516,7 +745,6 @@
       }
     }
 
-    // Colisiones jugador-jugador
     for (let i = 0; i < state.players.length; i++) {
       for (let j = i + 1; j < state.players.length; j++) {
         const p1 = state.players[i];
@@ -533,7 +761,6 @@
       }
     }
 
-    // Colisiones jugador-pelota
     state.players.forEach(player => {
       if (dist(player.pos, ball.pos) < player.radius + ball.radius) {
         const result = resolveCollision(player.pos, player.vel, player.mass, ball.pos, ball.vel, ball.mass);
@@ -572,18 +799,15 @@
   function draw() {
     const W = CANVAS_WIDTH, H = CANVAS_HEIGHT;
 
-    // Césped
     ctx.fillStyle = '#1d5e2e';
     ctx.fillRect(0, 0, W, H);
 
-    // Líneas decorativas
     ctx.fillStyle = '#256d37';
     const stripWidth = W / 15;
     for (let i = 0; i < 15; i += 2) {
       ctx.fillRect(i * stripWidth, 0, stripWidth, H);
     }
 
-    // Líneas de cancha
     ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 3;
     ctx.strokeRect(10, 10, W - 20, H - 20);
@@ -597,7 +821,6 @@
     ctx.arc(W / 2, H / 2, 70, 0, Math.PI * 2);
     ctx.stroke();
 
-    // Porterías
     ctx.fillStyle = '#c0392b';
     ctx.fillRect(0, (H - GOAL_SIZE) / 2, 10, GOAL_SIZE);
     ctx.fillStyle = '#2980b9';
@@ -608,7 +831,6 @@
     ctx.strokeRect(0, (H - GOAL_SIZE) / 2, 10, GOAL_SIZE);
     ctx.strokeRect(W - 10, (H - GOAL_SIZE) / 2, 10, GOAL_SIZE);
 
-    // Marcador
     ctx.fillStyle = 'rgba(0,0,0,0.5)';
     ctx.fillRect(W/2 - 60, 8, 120, 32);
     ctx.fillStyle = '#ffffff';
@@ -617,7 +839,6 @@
     ctx.textBaseline = 'middle';
     ctx.fillText(`${state.score.rojo} - ${state.score.azul}`, W/2, 24);
 
-    // Jugadores
     state.players.forEach(p => {
       const color = p.team === 'rojo' ? '#e74c3c' : '#3498db';
       ctx.shadowColor = 'rgba(0,0,0,0.3)';
@@ -647,7 +868,6 @@
       ctx.fillText(p.name, p.pos.x, p.pos.y - p.radius - 6);
       ctx.shadowBlur = 0;
 
-      // Indicador "TÚ"
       if (p.id === state.localPlayerId) {
         ctx.fillStyle = '#ffdd57';
         ctx.font = 'bold 9px sans-serif';
@@ -655,7 +875,6 @@
       }
     });
 
-    // Pelota
     const b = state.ball;
     ctx.shadowColor = 'rgba(0,0,0,0.4)';
     ctx.shadowBlur = 18;
@@ -668,7 +887,6 @@
     ctx.lineWidth = 2;
     ctx.stroke();
 
-    // Detalle
     ctx.beginPath();
     ctx.arc(b.pos.x - 3, b.pos.y - 3, 3, 0, Math.PI * 2);
     ctx.fillStyle = '#dddddd';
@@ -695,34 +913,211 @@
       `;
     });
     playerListContainer.innerHTML = html;
+    playerCount.textContent = `Jugadores: ${state.players.length}`;
   }
 
   function updateUI() {
     renderPlayerList();
-    // Actualizar estado de botones
     if (state.isJoined) {
       nameInput.disabled = true;
-      joinBtn.disabled = true;
-      teamBtns.forEach(b => b.style.pointerEvents = 'none');
+      joinBtn.style.display = 'none';
       leaveBtn.style.display = 'inline-block';
+      teamBtns.forEach(b => b.style.pointerEvents = 'none');
+      hostBtn.disabled = true;
+      connectBtn.disabled = true;
+      roomIdInput.disabled = true;
     } else {
       nameInput.disabled = false;
-      joinBtn.disabled = false;
-      teamBtns.forEach(b => b.style.pointerEvents = 'auto');
+      joinBtn.style.display = 'none';
       leaveBtn.style.display = 'none';
+      teamBtns.forEach(b => b.style.pointerEvents = 'auto');
+      hostBtn.disabled = false;
+      connectBtn.disabled = false;
+      roomIdInput.disabled = false;
     }
   }
 
   // --- GAME LOOP ---
   function gameLoop() {
-    updatePhysics();
+    if (state.isHost) {
+      // El host ejecuta la física y envía el estado
+      updatePhysics();
+      
+      // Enviar estado a todos los clientes
+      const gameState = {
+        players: state.players.map(p => p.toJSON()),
+        ball: state.ball.toJSON(),
+        score: state.score
+      };
+      state.connections.forEach(conn => {
+        if (conn.open) {
+          conn.send({ type: 'STATE_UPDATE', payload: gameState });
+        }
+      });
+    }
+    
     draw();
     animationId = requestAnimationFrame(gameLoop);
   }
 
-  // --- EVENTOS ---
-  function initEvents() {
-    // Selección de equipo
+  function startGameLoop() {
+    if (!isGameLoopRunning) {
+      isGameLoopRunning = true;
+      gameLoop();
+    }
+  }
+
+  // --- MANEJO DE CONEXIONES (HOST) ---
+  function setupHostConnections() {
+    state.peer.on('connection', (conn) => {
+      state.connections.push(conn);
+      updateConnectionStatus(`Host: ${state.connections.length} conectados`, '#7fc1db');
+
+      conn.on('data', (data) => {
+        if (data.type === 'PLAYER_JOIN') {
+          // Cliente se une
+          const playerData = data.payload;
+          const player = Player.fromJSON(playerData);
+          state.players.push(player);
+          
+          // Enviar estado completo al nuevo cliente
+          const gameState = {
+            players: state.players.map(p => p.toJSON()),
+            ball: state.ball.toJSON(),
+            score: state.score
+          };
+          conn.send({ type: 'INIT_STATE', payload: gameState });
+          
+          // Notificar a todos los clientes
+          state.connections.forEach(c => {
+            if (c !== conn && c.open) {
+              c.send({ type: 'PLAYER_JOIN', payload: player.toJSON() });
+            }
+          });
+          updateUI();
+        } else if (data.type === 'PLAYER_LEAVE') {
+          const id = data.payload.id;
+          state.players = state.players.filter(p => p.id !== id);
+          state.connections.forEach(c => {
+            if (c.open) {
+              c.send({ type: 'PLAYER_LEAVE', payload: { id } });
+            }
+          });
+          updateUI();
+        } else if (data.type === 'INPUT') {
+          // Reenviar inputs a todos (para sincronización)
+          state.connections.forEach(c => {
+            if (c !== conn && c.open) {
+              c.send({ type: 'INPUT', payload: data.payload });
+            }
+          });
+        }
+      });
+
+      conn.on('close', () => {
+        state.connections = state.connections.filter(c => c !== conn);
+        updateConnectionStatus(`Host: ${state.connections.length} conectados`, '#7fc1db');
+        showToast('👋 Un jugador se ha desconectado');
+      });
+    });
+  }
+
+  // --- CONECTARSE COMO CLIENTE ---
+  function connectToHost(hostId) {
+    if (!state.peer) {
+      showToast('❌ Inicializando PeerJS...');
+      return;
+    }
+
+    const conn = state.peer.connect(hostId);
+    state.connections.push(conn);
+
+    conn.on('open', () => {
+      updateConnectionStatus('Conectado al host', '#7fc1db');
+      showToast('✅ Conectado a la sala');
+      roomIdDisplay.textContent = `Sala: ${hostId.substring(0, 8)}...`;
+      
+      // Enviar unirse al host
+      const name = nameInput.value.trim() || 'Jugador';
+      const team = selectedTeam;
+      conn.send({
+        type: 'PLAYER_JOIN',
+        payload: { id: state.nextId++, name, team, pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, kicking: false }
+      });
+    });
+
+    conn.on('data', (data) => {
+      if (data.type === 'INIT_STATE') {
+        // Recibir estado inicial
+        const payload = data.payload;
+        state.players = payload.players.map(p => Player.fromJSON(p));
+        state.ball = Ball.fromJSON(payload.ball);
+        state.score = payload.score;
+        state.isJoined = true;
+        state.localPlayerId = state.players.find(p => p.name === nameInput.value.trim())?.id || state.players[0]?.id;
+        
+        // UI
+        nameInput.disabled = true;
+        joinBtn.style.display = 'none';
+        leaveBtn.style.display = 'inline-block';
+        teamBtns.forEach(b => b.style.pointerEvents = 'none');
+        hostBtn.disabled = true;
+        connectBtn.disabled = true;
+        roomIdInput.disabled = true;
+        updateUI();
+        startGameLoop();
+      } else if (data.type === 'STATE_UPDATE') {
+        // Actualizar estado del juego
+        const payload = data.payload;
+        state.players = payload.players.map(p => Player.fromJSON(p));
+        state.ball = Ball.fromJSON(payload.ball);
+        state.score = payload.score;
+        
+        // Actualizar ID local si no existe
+        if (!state.localPlayerId && state.players.length > 0) {
+          state.localPlayerId = state.players[0].id;
+        }
+        updateUI();
+      } else if (data.type === 'PLAYER_JOIN') {
+        const player = Player.fromJSON(data.payload);
+        state.players.push(player);
+        updateUI();
+      } else if (data.type === 'PLAYER_LEAVE') {
+        state.players = state.players.filter(p => p.id !== data.payload.id);
+        updateUI();
+      } else if (data.type === 'INPUT') {
+        // Aplicar inputs de otros jugadores (solo para visualización)
+        // En este caso, los inputs ya se manejan localmente
+      }
+    });
+
+    conn.on('close', () => {
+      state.connections = state.connections.filter(c => c !== conn);
+      updateConnectionStatus('Desconectado del host', '#e06060');
+      showToast('⚠️ Desconectado del host');
+      // Limpiar estado
+      state.players = [];
+      state.isJoined = false;
+      state.localPlayerId = null;
+      updateUI();
+    });
+  }
+
+  // --- INICIALIZACIÓN ---
+  async function init() {
+    // Team activo por defecto
+    document.querySelector('.team-btn.azul')?.classList.add('active');
+
+    // Inicializar PeerJS
+    try {
+      await initPeer();
+      updateConnectionStatus('Listo para jugar', '#7fc1db');
+    } catch (err) {
+      console.error('Error init peer:', err);
+      updateConnectionStatus('Error de conexión', '#e06060');
+    }
+
+    // Eventos UI
     teamBtns.forEach(btn => {
       btn.addEventListener('click', function() {
         if (state.isJoined) return;
@@ -732,22 +1127,72 @@
       });
     });
 
-    // Unirse
-    joinBtn.addEventListener('click', function() {
-      const name = nameInput.value.trim() || 'Jugador';
+    // Crear sala (Host)
+    hostBtn.addEventListener('click', () => {
+      if (state.isJoined) return;
+      if (!state.peer) {
+        showToast('❌ Esperando conexión...');
+        return;
+      }
+      
+      state.isHost = true;
+      updateConnectionStatus('Host activo', '#7fc1db');
+      showToast('🏠 Sala creada! Comparte el ID');
+      
+      // Configurar conexiones entrantes
+      setupHostConnections();
+      
+      // Agregar al host como jugador
+      const name = nameInput.value.trim() || 'Host';
       addPlayer(name, selectedTeam);
+      
+      // UI
+      hostBtn.style.display = 'none';
+      connectBtn.style.display = 'none';
+      roomIdInput.style.display = 'none';
+      joinBtn.style.display = 'inline-block';
+      joinBtn.textContent = '✅ Listo para jugar';
+      joinBtn.disabled = true;
+      
+      startGameLoop();
     });
 
-    // Enter en input
-    nameInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') joinBtn.click();
+    // Unirse a sala (Cliente)
+    connectBtn.addEventListener('click', () => {
+      const roomId = roomIdInput.value.trim();
+      if (!roomId) {
+        showToast('❌ Ingresa un ID de sala');
+        return;
+      }
+      connectToHost(roomId);
+    });
+
+    // Enter en input de sala
+    roomIdInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') connectBtn.click();
+    });
+
+    // Unirse a la partida (después de crear o unirse)
+    joinBtn.addEventListener('click', () => {
+      // Ya implementado en addPlayer y connectToHost
     });
 
     // Salir
     leaveBtn.addEventListener('click', removeLocalPlayer);
 
-    // Reset pelota
-    resetBtn.addEventListener('click', resetBall);
+    // Copiar ID
+    copyRoomBtn.addEventListener('click', copyRoomId);
+
+    // Enter en nombre
+    nameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !state.isJoined) {
+        if (state.isHost) {
+          hostBtn.click();
+        } else {
+          connectBtn.click();
+        }
+      }
+    });
 
     // Teclado
     window.addEventListener('keydown', (e) => {
@@ -776,28 +1221,15 @@
       }
     });
 
-    // Prevenir scroll con espacio
+    // Prevenir scroll
     window.addEventListener('keydown', (e) => {
       if (e.key === ' ' || e.key.startsWith('Arrow')) e.preventDefault();
     }, { passive: false });
-  }
 
-  // --- INICIO ---
-  function init() {
-    // Team activo por defecto
-    document.querySelector('.team-btn.azul')?.classList.add('selected');
-    teamBtns.forEach(b => {
-      if (b.dataset.team === 'azul') b.classList.add('active');
-    });
-
-    initEvents();
     updateUI();
-
-    // Jugador de ejemplo
-    addPlayer('Carlos', 'azul');
-    addPlayer('Marta', 'rojo');
-
-    gameLoop();
+    
+    // Iniciar loop de dibujo aunque no haya jugadores (para mostrar cancha vacía)
+    startGameLoop();
   }
 
   init();
