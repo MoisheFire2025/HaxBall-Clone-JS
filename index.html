@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>HaxBall Multiplayer · PeerJS</title>
-  <!-- PeerJS CDN -->
   <script src="https://unpkg.com/peerjs@1.5.1/dist/peerjs.min.js"></script>
   <style>
     * {
@@ -53,6 +52,9 @@
       border-radius: 30px;
       font-family: monospace;
       color: #7fc1db;
+      font-size: 0.8rem;
+      word-break: break-all;
+      max-width: 200px;
     }
 
     .status-bar .copy-btn {
@@ -224,8 +226,8 @@
     }
 
     .join-input-group input {
-      min-width: 100px;
-      flex: 0 1 120px;
+      min-width: 150px;
+      flex: 0 1 160px;
     }
 
     .player-list {
@@ -359,6 +361,7 @@
       .join-input-group input { width: 100%; }
       .status-bar { flex-direction: column; align-items: stretch; text-align: center; }
       .info-footer .controls-hint span { font-size: 0.6rem; padding: 1px 8px; }
+      .status-bar .room-id { max-width: 100%; }
     }
   </style>
 </head>
@@ -366,7 +369,7 @@
 <div class="game-wrapper">
   <!-- Status Bar -->
   <div class="status-bar" id="statusBar">
-    <span>🔗 Estado: <span id="connectionStatus">Desconectado</span></span>
+    <span>🔗 Estado: <span id="connectionStatus">Conectando...</span></span>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
       <span class="room-id" id="roomIdDisplay">Sin sala</span>
       <button class="copy-btn" id="copyRoomBtn" style="display:none;">📋 Copiar ID</button>
@@ -382,10 +385,10 @@
     </div>
     <button class="action-btn host" id="hostBtn">🏠 Crear Sala</button>
     <div class="join-input-group">
-      <input type="text" id="roomIdInput" placeholder="ID de sala" maxlength="20">
+      <input type="text" id="roomIdInput" placeholder="ID de sala" maxlength="40">
       <button class="action-btn connect" id="connectBtn">🔗 Unirse</button>
     </div>
-    <button class="action-btn join" id="joinBtn" style="display:none;">➕ Unirse a la partida</button>
+    <button class="action-btn join" id="joinBtn" style="display:none;">✅ En partida</button>
     <button class="action-btn leave" id="leaveBtn">🚪 Salir</button>
     <div class="player-list" id="playerListContainer">
       <span style="color:#6f9eb0; font-size:0.8rem; opacity:0.7;">👥 Sin jugadores</span>
@@ -526,7 +529,8 @@
     score: { azul: 0, rojo: 0 },
     peer: null,
     connections: [],
-    roomId: null
+    roomId: null,
+    isPeerReady: false
   };
 
   // Inputs locales
@@ -573,7 +577,6 @@
       navigator.clipboard.writeText(state.roomId).then(() => {
         showToast('✅ ID de sala copiado');
       }).catch(() => {
-        // Fallback
         const textarea = document.createElement('textarea');
         textarea.value = state.roomId;
         document.body.appendChild(textarea);
@@ -592,19 +595,22 @@
       peer.on('open', (id) => {
         state.peer = peer;
         state.roomId = id;
-        roomIdDisplay.textContent = `ID: ${id.substring(0, 8)}...`;
+        state.isPeerReady = true;
+        roomIdDisplay.textContent = `ID: ${id}`;
         copyRoomBtn.style.display = 'inline-block';
-        updateConnectionStatus('Conectado a PeerJS', '#7fc1db');
+        updateConnectionStatus('Conectado', '#7fc1db');
         resolve(peer);
       });
       peer.on('error', (err) => {
         console.error('Peer error:', err);
-        updateConnectionStatus('Error de conexión', '#e06060');
+        updateConnectionStatus('Error: ' + err.message, '#e06060');
         showToast('❌ Error en PeerJS: ' + err.message);
+        state.isPeerReady = false;
       });
       peer.on('disconnected', () => {
         updateConnectionStatus('Desconectado', '#e06060');
         showToast('⚠️ Desconectado del servidor');
+        state.isPeerReady = false;
       });
     });
   }
@@ -633,22 +639,24 @@
     state.localPlayerId = player.id;
     state.isJoined = true;
 
-    // UI
     nameInput.disabled = true;
-    joinBtn.style.display = 'none';
+    joinBtn.style.display = 'inline-block';
+    joinBtn.textContent = '✅ En partida';
+    joinBtn.disabled = true;
     leaveBtn.style.display = 'inline-block';
     teamBtns.forEach(b => b.style.pointerEvents = 'none');
     hostBtn.disabled = true;
     connectBtn.disabled = true;
     roomIdInput.disabled = true;
 
-    // Notificar al host
     if (!state.isHost && state.connections.length > 0) {
       state.connections.forEach(conn => {
-        conn.send({
-          type: 'PLAYER_JOIN',
-          payload: player.toJSON()
-        });
+        if (conn.open) {
+          conn.send({
+            type: 'PLAYER_JOIN',
+            payload: player.toJSON()
+          });
+        }
       });
     }
 
@@ -659,13 +667,14 @@
   function removeLocalPlayer() {
     if (!state.isJoined) return;
 
-    // Notificar al host
     if (!state.isHost && state.connections.length > 0) {
       state.connections.forEach(conn => {
-        conn.send({
-          type: 'PLAYER_LEAVE',
-          payload: { id: state.localPlayerId }
-        });
+        if (conn.open) {
+          conn.send({
+            type: 'PLAYER_LEAVE',
+            payload: { id: state.localPlayerId }
+          });
+        }
       });
     }
 
@@ -675,6 +684,7 @@
 
     nameInput.disabled = false;
     joinBtn.style.display = 'none';
+    joinBtn.disabled = false;
     leaveBtn.style.display = 'none';
     teamBtns.forEach(b => b.style.pointerEvents = 'auto');
     hostBtn.disabled = false;
@@ -918,32 +928,13 @@
 
   function updateUI() {
     renderPlayerList();
-    if (state.isJoined) {
-      nameInput.disabled = true;
-      joinBtn.style.display = 'none';
-      leaveBtn.style.display = 'inline-block';
-      teamBtns.forEach(b => b.style.pointerEvents = 'none');
-      hostBtn.disabled = true;
-      connectBtn.disabled = true;
-      roomIdInput.disabled = true;
-    } else {
-      nameInput.disabled = false;
-      joinBtn.style.display = 'none';
-      leaveBtn.style.display = 'none';
-      teamBtns.forEach(b => b.style.pointerEvents = 'auto');
-      hostBtn.disabled = false;
-      connectBtn.disabled = false;
-      roomIdInput.disabled = false;
-    }
   }
 
   // --- GAME LOOP ---
   function gameLoop() {
     if (state.isHost) {
-      // El host ejecuta la física y envía el estado
       updatePhysics();
       
-      // Enviar estado a todos los clientes
       const gameState = {
         players: state.players.map(p => p.toJSON()),
         ball: state.ball.toJSON(),
@@ -975,12 +966,10 @@
 
       conn.on('data', (data) => {
         if (data.type === 'PLAYER_JOIN') {
-          // Cliente se une
           const playerData = data.payload;
           const player = Player.fromJSON(playerData);
           state.players.push(player);
           
-          // Enviar estado completo al nuevo cliente
           const gameState = {
             players: state.players.map(p => p.toJSON()),
             ball: state.ball.toJSON(),
@@ -988,15 +977,16 @@
           };
           conn.send({ type: 'INIT_STATE', payload: gameState });
           
-          // Notificar a todos los clientes
           state.connections.forEach(c => {
             if (c !== conn && c.open) {
               c.send({ type: 'PLAYER_JOIN', payload: player.toJSON() });
             }
           });
           updateUI();
+          showToast(`👤 ${player.name} se unió al juego`);
         } else if (data.type === 'PLAYER_LEAVE') {
           const id = data.payload.id;
+          const leavingPlayer = state.players.find(p => p.id === id);
           state.players = state.players.filter(p => p.id !== id);
           state.connections.forEach(c => {
             if (c.open) {
@@ -1004,13 +994,9 @@
             }
           });
           updateUI();
-        } else if (data.type === 'INPUT') {
-          // Reenviar inputs a todos (para sincronización)
-          state.connections.forEach(c => {
-            if (c !== conn && c.open) {
-              c.send({ type: 'INPUT', payload: data.payload });
-            }
-          });
+          if (leavingPlayer) {
+            showToast(`👋 ${leavingPlayer.name} abandonó el juego`);
+          }
         }
       });
 
@@ -1024,41 +1010,57 @@
 
   // --- CONECTARSE COMO CLIENTE ---
   function connectToHost(hostId) {
-    if (!state.peer) {
-      showToast('❌ Inicializando PeerJS...');
+    if (!state.peer || !state.isPeerReady) {
+      showToast('❌ Esperando conexión...');
       return;
     }
 
     const conn = state.peer.connect(hostId);
-    state.connections.push(conn);
-
+    
     conn.on('open', () => {
+      state.connections.push(conn);
       updateConnectionStatus('Conectado al host', '#7fc1db');
       showToast('✅ Conectado a la sala');
-      roomIdDisplay.textContent = `Sala: ${hostId.substring(0, 8)}...`;
+      roomIdDisplay.textContent = `Sala: ${hostId}`;
       
-      // Enviar unirse al host
       const name = nameInput.value.trim() || 'Jugador';
       const team = selectedTeam;
+      const tempId = state.nextId++;
       conn.send({
         type: 'PLAYER_JOIN',
-        payload: { id: state.nextId++, name, team, pos: { x: 0, y: 0 }, vel: { x: 0, y: 0 }, kicking: false }
+        payload: { 
+          id: tempId, 
+          name, 
+          team, 
+          pos: { x: 0, y: 0 }, 
+          vel: { x: 0, y: 0 }, 
+          kicking: false 
+        }
       });
+      
+      // Guardar ID temporal para identificarse después
+      state.localPlayerId = tempId;
     });
 
     conn.on('data', (data) => {
       if (data.type === 'INIT_STATE') {
-        // Recibir estado inicial
         const payload = data.payload;
         state.players = payload.players.map(p => Player.fromJSON(p));
         state.ball = Ball.fromJSON(payload.ball);
         state.score = payload.score;
         state.isJoined = true;
-        state.localPlayerId = state.players.find(p => p.name === nameInput.value.trim())?.id || state.players[0]?.id;
         
-        // UI
+        // Encontrar nuestro ID real
+        const myName = nameInput.value.trim();
+        const myPlayer = state.players.find(p => p.name === myName);
+        if (myPlayer) {
+          state.localPlayerId = myPlayer.id;
+        }
+        
         nameInput.disabled = true;
-        joinBtn.style.display = 'none';
+        joinBtn.style.display = 'inline-block';
+        joinBtn.textContent = '✅ En partida';
+        joinBtn.disabled = true;
         leaveBtn.style.display = 'inline-block';
         teamBtns.forEach(b => b.style.pointerEvents = 'none');
         hostBtn.disabled = true;
@@ -1066,28 +1068,25 @@
         roomIdInput.disabled = true;
         updateUI();
         startGameLoop();
+        showToast('🎮 ¡Partida iniciada!');
       } else if (data.type === 'STATE_UPDATE') {
-        // Actualizar estado del juego
         const payload = data.payload;
         state.players = payload.players.map(p => Player.fromJSON(p));
         state.ball = Ball.fromJSON(payload.ball);
         state.score = payload.score;
-        
-        // Actualizar ID local si no existe
-        if (!state.localPlayerId && state.players.length > 0) {
-          state.localPlayerId = state.players[0].id;
-        }
         updateUI();
       } else if (data.type === 'PLAYER_JOIN') {
         const player = Player.fromJSON(data.payload);
         state.players.push(player);
         updateUI();
+        showToast(`👤 ${player.name} se unió`);
       } else if (data.type === 'PLAYER_LEAVE') {
+        const leavingPlayer = state.players.find(p => p.id === data.payload.id);
         state.players = state.players.filter(p => p.id !== data.payload.id);
         updateUI();
-      } else if (data.type === 'INPUT') {
-        // Aplicar inputs de otros jugadores (solo para visualización)
-        // En este caso, los inputs ya se manejan localmente
+        if (leavingPlayer) {
+          showToast(`👋 ${leavingPlayer.name} abandonó`);
+        }
       }
     });
 
@@ -1095,26 +1094,36 @@
       state.connections = state.connections.filter(c => c !== conn);
       updateConnectionStatus('Desconectado del host', '#e06060');
       showToast('⚠️ Desconectado del host');
-      // Limpiar estado
       state.players = [];
       state.isJoined = false;
       state.localPlayerId = null;
+      nameInput.disabled = false;
+      joinBtn.style.display = 'none';
+      joinBtn.disabled = false;
+      leaveBtn.style.display = 'none';
+      teamBtns.forEach(b => b.style.pointerEvents = 'auto');
+      hostBtn.disabled = false;
+      connectBtn.disabled = false;
+      roomIdInput.disabled = false;
       updateUI();
+    });
+
+    conn.on('error', (err) => {
+      showToast('❌ Error de conexión: ' + err.message);
+      updateConnectionStatus('Error de conexión', '#e06060');
     });
   }
 
   // --- INICIALIZACIÓN ---
   async function init() {
-    // Team activo por defecto
     document.querySelector('.team-btn.azul')?.classList.add('active');
 
-    // Inicializar PeerJS
     try {
       await initPeer();
-      updateConnectionStatus('Listo para jugar', '#7fc1db');
+      updateConnectionStatus('Listo', '#7fc1db');
     } catch (err) {
       console.error('Error init peer:', err);
-      updateConnectionStatus('Error de conexión', '#e06060');
+      updateConnectionStatus('Error', '#e06060');
     }
 
     // Eventos UI
@@ -1127,10 +1136,9 @@
       });
     });
 
-    // Crear sala (Host)
     hostBtn.addEventListener('click', () => {
       if (state.isJoined) return;
-      if (!state.peer) {
+      if (!state.peer || !state.isPeerReady) {
         showToast('❌ Esperando conexión...');
         return;
       }
@@ -1139,25 +1147,18 @@
       updateConnectionStatus('Host activo', '#7fc1db');
       showToast('🏠 Sala creada! Comparte el ID');
       
-      // Configurar conexiones entrantes
       setupHostConnections();
       
-      // Agregar al host como jugador
       const name = nameInput.value.trim() || 'Host';
       addPlayer(name, selectedTeam);
       
-      // UI
       hostBtn.style.display = 'none';
       connectBtn.style.display = 'none';
       roomIdInput.style.display = 'none';
-      joinBtn.style.display = 'inline-block';
-      joinBtn.textContent = '✅ Listo para jugar';
-      joinBtn.disabled = true;
       
       startGameLoop();
     });
 
-    // Unirse a sala (Cliente)
     connectBtn.addEventListener('click', () => {
       const roomId = roomIdInput.value.trim();
       if (!roomId) {
@@ -1167,23 +1168,14 @@
       connectToHost(roomId);
     });
 
-    // Enter en input de sala
     roomIdInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') connectBtn.click();
     });
 
-    // Unirse a la partida (después de crear o unirse)
-    joinBtn.addEventListener('click', () => {
-      // Ya implementado en addPlayer y connectToHost
-    });
-
-    // Salir
     leaveBtn.addEventListener('click', removeLocalPlayer);
 
-    // Copiar ID
     copyRoomBtn.addEventListener('click', copyRoomId);
 
-    // Enter en nombre
     nameInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !state.isJoined) {
         if (state.isHost) {
@@ -1194,8 +1186,12 @@
       }
     });
 
-    // Teclado
-    window.addEventListener('keydown', (e) => {
+    // --- CONTROLES DE TECLADO (CORREGIDO) ---
+    // Solo capturar teclas cuando NO estamos en un input
+    document.addEventListener('keydown', (e) => {
+      // Si el foco está en un input, ignorar
+      if (e.target.tagName === 'INPUT') return;
+      
       const key = e.key.toLowerCase();
       if (['arrowup', 'arrowdown', 'arrowleft', 'arrowright', ' ', 'w', 'a', 's', 'd'].includes(key) ||
           e.key.startsWith('Arrow')) {
@@ -1210,7 +1206,9 @@
       }
     });
 
-    window.addEventListener('keyup', (e) => {
+    document.addEventListener('keyup', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      
       const key = e.key.toLowerCase();
       switch (key) {
         case 'arrowup': case 'w': localInputs.up = false; break;
@@ -1222,13 +1220,14 @@
     });
 
     // Prevenir scroll
-    window.addEventListener('keydown', (e) => {
-      if (e.key === ' ' || e.key.startsWith('Arrow')) e.preventDefault();
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.key === ' ' || e.key.startsWith('Arrow')) {
+        e.preventDefault();
+      }
     }, { passive: false });
 
     updateUI();
-    
-    // Iniciar loop de dibujo aunque no haya jugadores (para mostrar cancha vacía)
     startGameLoop();
   }
 
